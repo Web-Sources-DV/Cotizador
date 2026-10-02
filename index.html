@@ -6,7 +6,7 @@
     <title>SQP LEGAL CONSULTING – Cotizador Jurídico</title>
 
     <!-- Favicon (se asigna dinámicamente con JS) -->
-    <link rel="icon" id="faviconLink" type="image/png">
+    <link rel="icon" id="faviconLink" type="image/svg+xml">
 
     <!-- Dependencia para PDF -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
@@ -2915,13 +2915,18 @@
                 document.body.classList.add('dark-mode');
                 document.getElementById('darkModeToggle').textContent = '☀️';
             }
+            const logoSvg = document.getElementById('sqpLogoSvg');
+            if (logoSvg) {
+                const faviconSvg = logoSvg.cloneNode(true);
+                faviconSvg.removeAttribute('id');
+                faviconSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                faviconSvg.setAttribute('viewBox', faviconSvg.getAttribute('viewBox') || '0 0 200 200');
+                const svgText = new XMLSerializer().serializeToString(faviconSvg);
+                document.getElementById('faviconLink').href = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+            }
             getPdfLogoDataUri().then((dataUri) => {
-                document.getElementById('faviconLink').href = dataUri;
                 document.getElementById('pdfLogoImg').src = dataUri;
-            }).catch(() => {
-                document.getElementById('faviconLink').href =
-                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" rx="12" fill="%23166490"/%3E%3Ctext x="32" y="42" font-family="Arial, sans-serif" font-weight="900" font-size="32" text-anchor="middle" fill="%23D4B85C" letter-spacing="2"%3ESQP%3C/text%3E%3C/svg%3E';
-            });
+            }).catch(() => {});
             checkProgrammerAccess();
 
             // Cargar procedimientos desde data/procedures.json (opcional)
