@@ -2453,7 +2453,7 @@
                     const newQuote = {
                         ...sanitizedData,
                         client: clientName,
-                        client_id: sharedClientId,
+                        client_id: await ensureSharedClient(clientName, idDoc, email, phone),
                         idDoc: idDoc,
                         email: email,
                         phone: phone,
@@ -2480,7 +2480,7 @@
             const quoteData = {
                 ...sanitizedData,
                 client: clientName,
-                client_id: findSharedClientId(clientName, phone, email),
+                client_id: sharedClientId,
                 idDoc: idDoc,
                 email: email,
                 phone: phone,
