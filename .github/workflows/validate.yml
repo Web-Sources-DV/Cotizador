@@ -1,0 +1,33 @@
+name: Validate Cotizador
+
+on:
+  push:
+    branches: [main, integration/shared-supabase-auth-data]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check inline JavaScript and SVG favicon
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
+            .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+          if (!scripts.length) throw new Error('Inline app script not found');
+          for (const [, , source] of scripts) new Function(source);
+          if (!html.includes('type="image/svg+xml"') || !html.includes('id="sqpLogoSvg"')) {
+            throw new Error('SVG logo or SVG favicon configuration missing');
+          }
+          console.log(`Validated ${scripts.length} inline script(s) and SVG branding.`);
+          NODE
