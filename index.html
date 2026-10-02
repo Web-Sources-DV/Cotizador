@@ -1480,7 +1480,7 @@
             if(existing) return existing.id;
             const now=new Date().toISOString();
             const id='cot-client-'+crypto.randomUUID();
-            const payload={id,fullName:name||'',firstName:(name||'').trim().split(/\\s+/)[0]||'',lastName:(name||'').trim().split(/\\s+/).slice(1).join(' '),passportNumber:documentNumber||'',document:documentNumber||'',code:id,executiveId:currentAuthUserId,email:email||'',phone:phone||'',nationality:'',issuingCountry:'',birthDate:'',expiryDate:'',sex:'',status:'NEW',origin:'cotizador',createdAt:now,updatedAt:now};
+            const payload={id,fullName:name||'',firstName:(name||'').trim().split(/\s+/)[0]||'',lastName:(name||'').trim().split(/\s+/).slice(1).join(' '),passportNumber:documentNumber||'',document:documentNumber||'',code:id,executiveId:currentAuthUserId,email:email||'',phone:phone||'',nationality:'',issuingCountry:'',birthDate:'',expiryDate:'',sex:'',status:'NEW',origin:'cotizador',createdAt:now,updatedAt:now};
             const {error}=await sqpSupabase.from('sqp_app_data').insert({bucket:'clients',id,owner_id:currentAuthUserId,payload});
             if(error) throw error;
             clients.push({...payload,owner_id:currentAuthUserId});
