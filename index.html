@@ -1765,78 +1765,54 @@
             document.getElementById('usersModal').classList.remove('active');
         }
 
-        function renderUsersList() {
-            const users = getUsers();
-            const container = document.getElementById('usersList');
-            container.innerHTML = '';
-            for (const [name, data] of Object.entries(users)) {
-                const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.justifyContent = 'space-between';
-                div.style.alignItems = 'center';
-                div.style.padding = '0.5rem';
-                div.style.borderBottom = '1px solid var(--border)';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = data.role === 'admin';
-                checkbox.addEventListener('change', function() {
-                    toggleUserRole(name, this.checked);
-                });
-                const toggleLabel = document.createElement('label');
-                toggleLabel.className = 'toggle-switch';
-                toggleLabel.appendChild(checkbox);
-                const slider = document.createElement('span');
-                slider.className = 'slider';
-                toggleLabel.appendChild(slider);
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = '🗑️';
-                deleteBtn.addEventListener('click', function() {
-                    deleteUser(name);
-                });
-                const actionsDiv = document.createElement('div');
-                actionsDiv.style.display = 'flex';
-                actionsDiv.style.gap = '0.5rem';
-                actionsDiv.style.alignItems = 'center';
-                actionsDiv.appendChild(toggleLabel);
-                actionsDiv.appendChild(deleteBtn);
-                div.innerHTML = `<span>${name} (${data.role})</span>`;
-                div.appendChild(actionsDiv);
-                container.appendChild(div);
-            }
+        async function renderUsersList() {
+            if (currentRole !== 'admin') return;
+            const container=document.getElementById('usersList');
+            container.innerHTML='<p>Cargando perfiles compartidos…</p>';
+            const {data:profiles,error}=await sqpSupabase.from('sqp_profiles').select('id,email,name,role,active').order('name');
+            if(error) { container.textContent='No se pudieron cargar perfiles: '+error.message; return; }
+            container.innerHTML='';
+            (profiles||[]).forEach(profile=>{
+                const div=document.createElement('div');
+                div.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:.5rem;border-bottom:1px solid var(--border);gap:1rem';
+                const details=document.createElement('span');
+                details.textContent=(profile.name||profile.email)+' · '+profile.email+' · '+profile.role+(profile.active?'':' · INACTIVO');
+                const actions=document.createElement('div');
+                actions.style.cssText='display:flex;align-items:center;gap:.5rem';
+                const checkbox=document.createElement('input');
+                checkbox.type='checkbox'; checkbox.checked=profile.role==='ADMIN'; checkbox.disabled=!profile.active;
+                checkbox.title='Activar/desactivar rol de administrador';
+                checkbox.addEventListener('change',()=>toggleUserRole(profile.id,checkbox.checked));
+                const toggle=document.createElement('label'); toggle.className='toggle-switch'; toggle.append(checkbox,document.createElement('span'));
+                const state=document.createElement('button');
+                state.textContent=profile.active?'Desactivar':'Activar';
+                state.disabled=profile.id===currentAuthUserId;
+                state.addEventListener('click',()=>deleteUser(profile.id,profile.name||profile.email));
+                actions.append(toggle,state); div.append(details,actions); container.append(div);
+            });
+            const add=document.getElementById('addUserBtn');
+            if(add) add.textContent='Crear cuenta en Supabase Auth';
         }
 
-        function toggleUserRole(username, isAdmin) {
-            if (currentRole !== 'admin') { alert('Acceso denegado.'); return; }
-            const users = getUsers();
-            if (users[username]) {
-                users[username].role = isAdmin ? 'admin' : 'executive';
-                saveUsers(users);
-                renderUsersList();
-            }
+        async function toggleUserRole(profileId, isAdmin) {
+            if(currentRole!=='admin') { alert('Acceso denegado.'); return; }
+            const {error}=await sqpSupabase.from('sqp_profiles').update({role:isAdmin?'ADMIN':'EXECUTIVE'}).eq('id',profileId);
+            if(error) alert('No se pudo actualizar el perfil compartido: '+error.message);
+            await renderUsersList();
         }
 
-        function deleteUser(username) {
-            if (currentRole !== 'admin') { alert('Acceso denegado.'); return; }
-            if (username === currentUser) { alert('No puedes eliminarte a ti mismo.'); return; }
-            if (confirm(`¿Eliminar a ${username}?`)) {
-                const users = getUsers();
-                delete users[username];
-                saveUsers(users);
-                renderUsersList();
-            }
+        async function deleteUser(profileId, name) {
+            if(currentRole!=='admin') { alert('Acceso denegado.'); return; }
+            if(profileId===currentAuthUserId) { alert('No puedes desactivar tu propio usuario.'); return; }
+            if(!confirm(`¿Desactivar a ${name} en todas las apps SQP?`)) return;
+            const {error}=await sqpSupabase.from('sqp_profiles').update({active:false}).eq('id',profileId);
+            if(error) alert('No se pudo desactivar el perfil: '+error.message);
+            await renderUsersList();
         }
 
         function addUser() {
-            if (currentRole !== 'admin') { alert('Acceso denegado.'); return; }
-            const name = document.getElementById('newUsername').value.trim();
-            const role = document.getElementById('newUserRole').value;
-            if (!name) { alert('Nombre requerido.'); return; }
-            const users = getUsers();
-            if (users[name]) { alert('El usuario ya existe.'); return; }
-            users[name] = { password: null, salt: null, role: role, photo: '', signature: '' };
-            saveUsers(users);
-            renderUsersList();
-            document.getElementById('newUsername').value = '';
+            if(currentRole!=='admin') { alert('Acceso denegado.'); return; }
+            alert('Crea o invita la cuenta desde Supabase Auth. Al crearla, aparecerá aquí como perfil compartido y el administrador podrá asignarle un rol.');
         }
 
         // ---- RECUPERAR CONTRASEÑA ----
@@ -1851,32 +1827,8 @@
         }
 
         function showPassword() {
-            const username = document.getElementById('loginUserSelect').value;
-            if (!username) {
-                document.getElementById('passwordDisplay').textContent = '⚠️ Primero selecciona un usuario.';
-                return;
-            }
-            const users = getUsers();
-            const user = users[username];
-            if (!user) {
-                document.getElementById('passwordDisplay').textContent = '⚠️ Usuario no encontrado.';
-                return;
-            }
-            document.getElementById('passwordDisplay').innerHTML = `
-                        🔐 La contraseña está encriptada por seguridad.<br>
-                        Si la olvidaste, un administrador puede restablecerla desde el panel de usuarios.<br>
-                        <button id="resetPasswordBtn" style="margin-top:0.5rem;">Restablecer contraseña</button>
-                    `;
-            document.getElementById('resetPasswordBtn')?.addEventListener('click', function() {
-                if (confirm(`¿Restablecer la contraseña de ${username}? Se pondrá en blanco para que pueda crear una nueva.`)) {
-                    const users = getUsers();
-                    users[username].password = null;
-                    users[username].salt = null;
-                    saveUsers(users);
-                    alert('Contraseña restablecida. El usuario podrá crear una nueva al iniciar sesión.');
-                    closePasswordModal();
-                }
-            });
+            document.getElementById('passwordDisplay').textContent =
+                'Las contraseñas ahora se gestionan desde la cuenta compartida Supabase Auth. Solicita un enlace de recuperación a un administrador.';
         }
 
         // ================================================================
