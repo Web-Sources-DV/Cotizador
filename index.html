@@ -1441,6 +1441,8 @@
             if(profileError) throw profileError;
             if(!profile||!profile.active) throw new Error('Tu perfil SQP no está activo. Contacta a un administrador.');
             currentAuthRole=profile.role;
+            const localUsers=getUsers();
+            if(profile.name && !localUsers[profile.name]) { localUsers[profile.name]={password:null,salt:null,role:['ADMIN','SUPERVISOR'].includes(profile.role)?'admin':'executive',photo:'',signature:''}; saveUsers(localUsers); }
             const {data:rows,error}=await sqpSupabase.from('sqp_app_data')
               .select('bucket,id,payload,owner_id').in('bucket',['quotes','quote_templates','suggestions','clients']);
             if(error) throw error;
@@ -1792,7 +1794,7 @@
                 const state=document.createElement('button');
                 state.textContent=profile.active?'Desactivar':'Activar';
                 state.disabled=profile.id===currentAuthUserId;
-                state.addEventListener('click',()=>deleteUser(profile.id,profile.name||profile.email));
+                state.addEventListener('click',()=>deleteUser(profile.id,profile.name||profile.email,profile.active));
                 actions.append(toggle,state); div.append(details,actions); container.append(div);
             });
             const add=document.getElementById('addUserBtn');
@@ -1806,11 +1808,11 @@
             await renderUsersList();
         }
 
-        async function deleteUser(profileId, name) {
+        async function deleteUser(profileId, name, wasActive) {
             if(currentRole!=='admin') { alert('Acceso denegado.'); return; }
             if(profileId===currentAuthUserId) { alert('No puedes desactivar tu propio usuario.'); return; }
-            if(!confirm(`¿Desactivar a ${name} en todas las apps SQP?`)) return;
-            const {error}=await sqpSupabase.from('sqp_profiles').update({active:false}).eq('id',profileId);
+            if(!confirm(`¿${wasActive?'Desactivar':'Activar'} a ${name} en todas las apps SQP?`)) return;
+            const {error}=await sqpSupabase.from('sqp_profiles').update({active:!wasActive}).eq('id',profileId);
             if(error) alert('No se pudo desactivar el perfil: '+error.message);
             await renderUsersList();
         }
