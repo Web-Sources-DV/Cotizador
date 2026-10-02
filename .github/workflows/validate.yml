@@ -22,8 +22,8 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const html = fs.readFileSync('index.html', 'utf8');
-          const scripts = [...html.matchAll(/<script([^>]*)>([\\s\\S]*?)<\\/script>/gi)]
-            .filter(([, attrs]) => !/\\bsrc\\s*=/.test(attrs));
+          const scripts = [...html.matchAll(/<script([^>]*)>([\s\\S]*?)<\/script>/gi)]
+            .filter(([, attrs]) => !/\bsrc\s*=/.test(attrs));
           if (!scripts.length) throw new Error('Inline app script not found');
           for (const [, , source] of scripts) new Function(source);
           if (!html.includes('type="image/svg+xml"') || !html.includes('id="sqpLogoSvg"')) {
