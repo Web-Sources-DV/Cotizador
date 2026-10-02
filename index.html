@@ -1399,7 +1399,7 @@
             const nextIds = new Set(next.map((r,i)=>String(r.id || r.quoteNumber || r.templateId || r.timestamp || i)));
             for (const old of previous) {
                 const id=String(old.id || old.quoteNumber || old.templateId || old.timestamp || '');
-                if (id && !nextIds.has(id) && (!old.owner_id || old.owner_id===currentAuthUserId) && ['ADMIN','SUPERVISOR'].includes(currentAuthRole)) {
+                if (id && !nextIds.has(id) && (['ADMIN','SUPERVISOR'].includes(currentAuthRole) || old.owner_id===currentAuthUserId)) {
                     void sqpSupabase.from('sqp_app_data').delete().eq('bucket',bucket).eq('id',id);
                 }
             }
@@ -1421,7 +1421,11 @@
         function getQuotes() { return localList(QUOTES_KEY); }
         function saveQuotes(rows) { persistRows('quotes',rows,QUOTES_KEY); }
         function getCounter() { try { return parseInt(localStorage.getItem(COUNTER_KEY)||'0'); } catch { return 0; } }
-        function incrementCounter() { const n=getCounter()+1; localStorage.setItem(COUNTER_KEY,String(n)); return n; }
+        async function incrementCounter() {
+            const {data,error}=await sqpSupabase.rpc('next_sqp_quote_number');
+            if(error) throw error;
+            const n=Number(data); localStorage.setItem(COUNTER_KEY,String(n)); return n;
+        }
         function getTemplates() { return localList(TEMPLATES_KEY); }
         function saveTemplates(rows) { persistRows('quote_templates',rows,TEMPLATES_KEY); }
         function getSuggestions() { return localList(SUGGESTIONS_KEY); }
@@ -2424,7 +2428,7 @@
                 }
             }
 
-            const counter = incrementCounter();
+            const counter = await incrementCounter();
             const year = new Date().getFullYear();
             const quoteNumber = `COT-${year}-${String(counter).padStart(4, '0')}`;
             const sharedClientId = await ensureSharedClient(clientName, idDoc, email, phone);
@@ -2992,7 +2996,7 @@
 
             // ---- GENERAR COTIZACIÓN (con resumen) ----
             document.getElementById('generateQuote').addEventListener('click', showSummary);
-            document.getElementById('confirmGenerateBtn').addEventListener('click', confirmGenerate);
+            document.getElementById('confirmGenerateBtn').addEventListener('click', () => confirmGenerate().catch(err => { console.error(err); alert('No se pudo guardar la cotización en Supabase: '+(err.message||'error desconocido')); }));
             document.getElementById('cancelGenerateBtn').addEventListener('click', cancelGenerate);
 
             // ---- EDITAR Y NUEVO ----
