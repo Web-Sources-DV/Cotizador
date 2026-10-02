@@ -1,19 +1,11 @@
 # Cotizador Jurídico SQP
 
-Aplicación estática del cotizador jurídico. Publica estos archivos juntos desde la raíz del repositorio:
+El cotizador y la app de financiamiento comparten el proyecto Supabase **Cotizador** (`bcmzhicashtsdzlmqrif`). Para Legal utiliza un proyecto independiente (`fipcnxfxxngdjunrlbat`).
 
-- `index.html`
-- `app.js`
-- `styles.css`
+Publica juntos `index.html`, `app.js`, `styles.css` y `logo.svg`. Inicia sesión con tu correo y contraseña de financiamiento; las cuentas y los perfiles `sqp_profiles` son compartidos entre estas dos apps.
 
-## Datos y acceso
+Las cotizaciones y clientes vinculados se guardan en `sqp_app_data`. Los buckets comerciales son `clients`, `requests`, `financings`, `audit`, `config`, `counters`, `quotes`, `quote_templates` y `suggestions`. El contador de cotizaciones usa `counters/quote`; financiamiento conserva `counters/default`. El RPC `next_sqp_quote_number` asigna números atómicamente.
 
-El cotizador se integra con el proyecto Supabase compartido de SQP y reutiliza `sqp_profiles` y `sqp_app_data`. La sesión se valida con Supabase Auth; los permisos efectivos dependen del perfil activo y de las políticas RLS ya aplicadas en la base.
+`supabase/setup.sql` documenta el esquema y los permisos del proyecto comercial. Nunca publiques usuarios, contraseñas, hashes o respaldos de clientes en el repositorio.
 
-Cotizaciones, clientes vinculados, plantillas, preferencias del perfil y sugerencias se guardan en la base de datos. El almacenamiento local solo mantiene una caché para lectura y se actualiza después de aceptar una escritura Supabase. Los precios de servicios adicionales y los descuentos se calculan por persona.
-
-El número de cotización se obtiene del RPC `next_sqp_quote_number`. No se requiere una migración adicional para este cambio.
-
-## PDF
-
-El documento generado incluye las observaciones y, justo debajo, las condiciones del trámite indicadas por SQP.
+El logo oficial de Daryl se conserva en `logo.svg` y se utiliza en la interfaz, el favicon y los PDF de las cotizaciones. No sustituirlo por letras SQP, iconos ni otro diseño. La conversión a PNG para html2pdf usa ese mismo SVG.

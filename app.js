@@ -20,8 +20,8 @@
         const SUGGESTIONS_KEY = 'sqp_suggestions';
         const PROFILES_KEY = 'sqp_shared_profiles';
         const PROFILE_PREFERENCES_KIND = 'profile_preferences';
-        const SUPABASE_URL = 'https://fipcnxfxxngdjunrlbat.supabase.co';
-        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2cK8fX6MV8F21xLM4A8gMg_hRCp3-9I';
+        const SUPABASE_URL = 'https://bcmzhicashtsdzlmqrif.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_EMThmpImC8ZlJhcUdkipOQ_GNvy8bgc';
         const sqpSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
@@ -109,7 +109,7 @@
         function saveSuggestions(rows) { return persistRows('suggestions', rows.map(x => ({ ...x, id: x.id || `sugg-${crypto.randomUUID()}` })), SUGGESTIONS_KEY); }
         async function loadSharedCotizadorData() {
             const { data: auth, error: authError } = await sqpSupabase.auth.getUser();
-            if (authError) throw authError;
+            if (authError && authError.name !== 'AuthSessionMissingError') throw authError;
             if (!auth.user) return null;
             currentAuthUserId = auth.user.id;
             const {data:profile,error:profileError}=await sqpSupabase.from('sqp_profiles')
@@ -329,13 +329,22 @@
         // ---- LOGIN ----
         async function handleLogin() {
             const errorDiv=document.getElementById('loginError');
+            const email=document.getElementById('loginEmail').value.trim();
+            const password=document.getElementById('loginPassword').value;
+            const button=document.getElementById('loginBtn');
+            if(!email || !password) { errorDiv.textContent='Introduce tu correo y contraseña de SQP.'; return; }
+            button.disabled=true;
             try {
+                const {error}=await sqpSupabase.auth.signInWithPassword({email,password});
+                if(error) throw error;
                 const profile=await loadSharedCotizadorData();
-                if(!profile) { errorDiv.textContent='Inicia sesión con tu cuenta corporativa en la app SQP unificada y vuelve a esta ventana.'; return; }
+                if(!profile) throw new Error('No se pudo validar la cuenta.');
+                document.getElementById('loginPassword').value='';
                 currentUser=profile.name||profile.email;
                 currentRole=profile.role==='VIEWER'?'viewer':['ADMIN','SUPERVISOR'].includes(profile.role)?'admin':'executive';
                 document.getElementById('loginScreen').style.display='none'; showApp(); errorDiv.textContent='';
-            } catch(err) { console.error(err); errorDiv.textContent=err.message||'No se pudo validar la sesión compartida.'; }
+            } catch(err) { console.error(err); clearSession(); errorDiv.textContent=err.message||'No se pudo validar la sesión compartida.'; }
+            finally { button.disabled=false; }
         }
 
         async function resumeSharedSession() {
@@ -1534,6 +1543,7 @@
 
             // ---- LOGIN ----
             document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('loginPassword').addEventListener('keydown', event => { if(event.key==='Enter') { event.preventDefault(); handleLogin(); } });
             // ---- LOGOUT ----
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
