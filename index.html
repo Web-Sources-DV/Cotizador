@@ -1447,11 +1447,24 @@
               .select('bucket,id,payload,owner_id').in('bucket',['quotes','quote_templates','suggestions','clients']);
             if(error) throw error;
             const byBucket=b=> (rows||[]).filter(r=>r.bucket===b).map(r=>({...r.payload,id:r.payload?.id||r.id,owner_id:r.owner_id}));
-            for(const [bucket,key] of [['quotes',QUOTES_KEY],['quote_templates',TEMPLATES_KEY],['suggestions',SUGGESTIONS_KEY]]) {
-                const values=byBucket(bucket);
-                if(values.length) localStorage.setItem(key,JSON.stringify(values));
-            }
             localStorage.setItem('sqp_shared_clients',JSON.stringify(byBucket('clients')));
+            for(const [bucket,key] of [['quotes',QUOTES_KEY],['quote_templates',TEMPLATES_KEY],['suggestions',SUGGESTIONS_KEY]]) {
+                const cloud=byBucket(bucket), local=localList(key);
+                const seen=new Set(cloud.map((row,i)=>String(row.id||row.quoteNumber||row.templateId||row.timestamp||i)));
+                const localOnly=local.filter((row,i)=>!seen.has(String(row.id||row.quoteNumber||row.templateId||row.timestamp||i)));
+                const merged=cloud.concat(localOnly);
+                localStorage.setItem(key,JSON.stringify(merged));
+                if(profile.role!=='VIEWER') persistRows(bucket,merged,key);
+                if(bucket==='quotes' && profile.role!=='VIEWER') {
+                    for(const quote of merged) {
+                        if(!quote.client_id && quote.client) {
+                            quote.client_id=await ensureSharedClient(quote.client,quote.idDoc,quote.email,quote.phone);
+                        }
+                    }
+                    localStorage.setItem(key,JSON.stringify(merged));
+                    persistRows('quotes',merged,key);
+                }
+            }
             return profile;
         }
         function findSharedClientId(name,phone,email,documentNumber) {
