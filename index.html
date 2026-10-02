@@ -9,6 +9,7 @@
     <link rel="icon" id="faviconLink" type="image/png">
 
     <!-- Dependencia para PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
     </script>
 
@@ -1374,48 +1375,87 @@
         //  UTILIDADES - Funciones reutilizables
         // ================================================================
 
-        // ---- PERSISTENCIA EN LOCALSTORAGE ----
-        const USERS_KEY = 'sqp_users_v4';
+
         const QUOTES_KEY = 'sqp_quotes';
-        const COUNTER_KEY = 'sqp_counter';
         const TEMPLATES_KEY = 'sqp_templates';
-        const SESSION_KEY = 'sqp_session';
         const SUGGESTIONS_KEY = 'sqp_suggestions';
+        const COUNTER_KEY = 'sqp_counter';
+        const SESSION_KEY = 'sqp_session';
+        const SUPABASE_URL = 'https://fipcnxfxxngdjunrlbat.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2cK8fX6MV8F21xLM4A8gMg_hRCp3-9I';
+        const sqpSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        let currentAuthUserId = null;
+        let currentAuthRole = null;
+        let currentAuthEmail = null;
 
-        function getUsers() {
-            try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; }
+        function localList(key) { try { const v=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(v)?v:[]; } catch { return []; } }
+        function persistRows(bucket, rows, key) {
+            const previous = localList(key);
+            const next = Array.isArray(rows) ? rows : [];
+            localStorage.setItem(key, JSON.stringify(next));
+            if (!currentAuthUserId) return;
+            const nextIds = new Set(next.map((r,i)=>String(r.id || r.quoteNumber || r.templateId || r.timestamp || i)));
+            for (const old of previous) {
+                const id=String(old.id || old.quoteNumber || old.templateId || old.timestamp || '');
+                if (id && !nextIds.has(id) && (!old.owner_id || old.owner_id===currentAuthUserId) && ['ADMIN','SUPERVISOR'].includes(currentAuthRole)) {
+                    void sqpSupabase.from('sqp_app_data').delete().eq('bucket',bucket).eq('id',id);
+                }
+            }
+            const safe = next.map((row,i)=> {
+                const id=String(row.id || row.quoteNumber || row.templateId || row.timestamp || (bucket+'-'+i));
+                const owner_id=row.owner_id || currentAuthUserId;
+                return {...row,id,owner_id};
+            });
+            localStorage.setItem(key,JSON.stringify(safe));
+            const writes=safe.filter(row=>['ADMIN','SUPERVISOR'].includes(currentAuthRole)||row.owner_id===currentAuthUserId)
+              .map(row=>sqpSupabase.from('sqp_app_data').upsert({bucket,id:String(row.id),owner_id:row.owner_id,payload:row,updated_at:new Date().toISOString()},{onConflict:'bucket,id'}));
+            Promise.all(writes).then(results=>{
+                const failed=results.find(x=>x.error);
+                if(failed) console.error('Error guardando en la base compartida:',failed.error.message);
+            }).catch(console.error);
         }
-        function saveUsers(users) {
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        function getUsers() { try { return JSON.parse(localStorage.getItem('sqp_users_v4')||'{}'); } catch { return {}; } }
+        function saveUsers(users) { localStorage.setItem('sqp_users_v4',JSON.stringify(users)); }
+        function getQuotes() { return localList(QUOTES_KEY); }
+        function saveQuotes(rows) { persistRows('quotes',rows,QUOTES_KEY); }
+        function getCounter() { try { return parseInt(localStorage.getItem(COUNTER_KEY)||'0'); } catch { return 0; } }
+        function incrementCounter() { const n=getCounter()+1; localStorage.setItem(COUNTER_KEY,String(n)); return n; }
+        function getTemplates() { return localList(TEMPLATES_KEY); }
+        function saveTemplates(rows) { persistRows('quote_templates',rows,TEMPLATES_KEY); }
+        function getSuggestions() { return localList(SUGGESTIONS_KEY); }
+        function saveSuggestions(rows) { persistRows('suggestions',rows.map((x,i)=>({...x,id:x.id||'sugg-'+x.timestamp+'-'+i})),SUGGESTIONS_KEY); }
+        async function loadSharedCotizadorData() {
+            const {data:auth,error:authError}=await sqpSupabase.auth.getSession();
+            if(authError) throw authError;
+            if(!auth.session) return null;
+            currentAuthUserId=auth.session.user.id; currentAuthEmail=auth.session.user.email||'';
+            const {data:profile,error:profileError}=await sqpSupabase.from('sqp_profiles')
+              .select('id,email,name,role,active').eq('id',currentAuthUserId).maybeSingle();
+            if(profileError) throw profileError;
+            if(!profile||!profile.active) throw new Error('Tu perfil SQP no está activo. Contacta a un administrador.');
+            currentAuthRole=profile.role;
+            const {data:rows,error}=await sqpSupabase.from('sqp_app_data')
+              .select('bucket,id,payload,owner_id').in('bucket',['quotes','quote_templates','suggestions','clients']);
+            if(error) throw error;
+            const byBucket=b=> (rows||[]).filter(r=>r.bucket===b).map(r=>({...r.payload,id:r.payload?.id||r.id,owner_id:r.owner_id}));
+            for(const [bucket,key] of [['quotes',QUOTES_KEY],['quote_templates',TEMPLATES_KEY],['suggestions',SUGGESTIONS_KEY]]) {
+                const values=byBucket(bucket);
+                if(values.length) localStorage.setItem(key,JSON.stringify(values));
+            }
+            localStorage.setItem('sqp_shared_clients',JSON.stringify(byBucket('clients')));
+            return profile;
         }
-        function getQuotes() {
-            try { return JSON.parse(localStorage.getItem(QUOTES_KEY) || '[]'); } catch { return []; }
+        function findSharedClientId(name,phone,email) {
+            const clients=localList('sqp_shared_clients');
+            const norm=s=>(s||'').toString().trim().toLocaleLowerCase();
+            const client=clients.find(c=>(phone&&norm(c.phone)===norm(phone))||(email&&norm(c.email)===norm(email))||(name&&norm(c.fullName)===norm(name)));
+            return client?.id||null;
         }
-        function saveQuotes(quotes) {
-            localStorage.setItem(QUOTES_KEY, JSON.stringify(quotes));
-        }
-        function getCounter() {
-            try { return parseInt(localStorage.getItem(COUNTER_KEY) || '0'); } catch { return 0; }
-        }
-        function incrementCounter() {
-            const newVal = getCounter() + 1;
-            localStorage.setItem(COUNTER_KEY, String(newVal));
-            return newVal;
-        }
-        function getTemplates() {
-            try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch { return []; }
-        }
-        function saveTemplates(templates) {
-            localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
-        }
-        function getSuggestions() {
-            try { return JSON.parse(localStorage.getItem(SUGGESTIONS_KEY) || '[]'); } catch { return []; }
-        }
-        function saveSuggestions(suggestions) {
-            localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(suggestions));
-        }
+        async function signOutSharedSession() { await sqpSupabase.auth.signOut(); }
 
-        // ---- HASH CON WEB CRYPTO API ----
+                // ---- HASH CON WEB CRYPTO API ----
         function bufferToBase64(buffer) {
             const bytes = new Uint8Array(buffer);
             let binary = '';
@@ -1662,58 +1702,27 @@
 
         // ---- LOGIN ----
         async function handleLogin() {
-            console.log('🔐 Intentando login...');
-            const username = document.getElementById('loginUserSelect').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorDiv = document.getElementById('loginError');
-
-            if (!username) { errorDiv.textContent = 'Seleccione un usuario.'; return; }
-            if (!password) { errorDiv.textContent = 'Ingrese una contraseña.'; return; }
-
-            const users = getUsers();
-            const user = users[username];
-            if (!user) { errorDiv.textContent = 'Usuario no válido.'; return; }
-
+            const errorDiv=document.getElementById('loginError');
             try {
-                if (user.password === null || user.password === undefined) {
-                    console.log(`🔑 Creando contraseña para ${username}...`);
-                    const { hash, salt } = await hashPassword(password);
-                    user.password = hash;
-                    user.salt = salt;
-                    saveUsers(users);
-                    console.log('✅ Contraseña creada y guardada.');
-                } else {
-                    console.log(`🔍 Verificando contraseña para ${username}...`);
-                    const match = await verifyPassword(password, user.password, user.salt);
-                    if (!match) {
-                        errorDiv.textContent = 'Contraseña incorrecta.';
-                        console.warn('❌ Contraseña incorrecta.');
-                        return;
-                    }
-                    console.log('✅ Contraseña correcta.');
-                }
+                const profile=await loadSharedCotizadorData();
+                if(!profile) { errorDiv.textContent='Inicia sesión primero en la app SQP unificada.'; return; }
+                currentUser=profile.name||profile.email; currentRole=['ADMIN','SUPERVISOR'].includes(profile.role)?'admin':'executive';
+                setSession(currentUser,currentRole);
+                document.getElementById('loginScreen').style.display='none'; showApp(); errorDiv.textContent='';
+            } catch(err) { console.error(err); errorDiv.textContent=err.message||'No se pudo validar la sesión compartida.'; }
+        }
 
-                currentUser = username;
-                currentRole = user.role;
-                setSession(username, user.role);
-
-                const loginScreen = document.getElementById('loginScreen');
-                loginScreen.style.transform = 'scale(0)';
-                loginScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loginScreen.style.display = 'none';
-                    showApp();
-                }, 300);
-                errorDiv.textContent = '';
-                console.log(`👤 Usuario ${username} logueado como ${currentRole}.`);
-            } catch (err) {
-                console.error('❌ Error en login:', err);
-                errorDiv.textContent = 'Error inesperado. Revisa la consola.';
-            }
+        async function resumeSharedSession() {
+            const profile=await loadSharedCotizadorData();
+            if(!profile) return false;
+            currentUser=profile.name||profile.email; currentRole=['ADMIN','SUPERVISOR'].includes(profile.role)?'admin':'executive';
+            setSession(currentUser,currentRole);
+            return true;
         }
 
         // ---- LOGOUT ----
-        function handleLogout() {
+        async function handleLogout() {
+            await signOutSharedSession();
             currentUser = null;
             currentRole = null;
             clearSession();
@@ -2430,6 +2439,7 @@
                     const newQuote = {
                         ...sanitizedData,
                         client: clientName,
+                        client_id: findSharedClientId(clientName, phone, email),
                         idDoc: idDoc,
                         email: email,
                         phone: phone,
@@ -2455,6 +2465,7 @@
             const quoteData = {
                 ...sanitizedData,
                 client: clientName,
+                client_id: findSharedClientId(clientName, phone, email),
                 idDoc: idDoc,
                 email: email,
                 phone: phone,
@@ -2977,16 +2988,12 @@
             });
 
             // ---- VERIFICAR SESIÓN ----
-            const session = getSession();
-            if (session) {
-                currentUser = session.user;
-                currentRole = session.role;
-                document.getElementById('loginScreen').style.display = 'none';
-                showApp();
-            } else {
-                document.getElementById('loginScreen').style.display = 'block';
-                document.getElementById('mainApp').style.display = 'none';
-            }
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'none';
+            resumeSharedSession().then(ok => {
+                if (ok) { document.getElementById('loginScreen').style.display='none'; showApp(); }
+                else document.getElementById('loginError').textContent='Abre primero la app SQP unificada e inicia sesión con tu cuenta corporativa.';
+            }).catch(err => { console.error(err); document.getElementById('loginError').textContent=err.message||'Error al validar la cuenta.'; });
 
             // ---- CONSTRUIR LISTAS ----
             buildServicesList();
