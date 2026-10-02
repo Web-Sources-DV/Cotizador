@@ -1447,11 +1447,25 @@
             localStorage.setItem('sqp_shared_clients',JSON.stringify(byBucket('clients')));
             return profile;
         }
-        function findSharedClientId(name,phone,email) {
+        function findSharedClientId(name,phone,email,documentNumber) {
             const clients=localList('sqp_shared_clients');
             const norm=s=>(s||'').toString().trim().toLocaleLowerCase();
-            const client=clients.find(c=>(phone&&norm(c.phone)===norm(phone))||(email&&norm(c.email)===norm(email))||(name&&norm(c.fullName)===norm(name)));
+            const client=clients.find(c=>(documentNumber&&(norm(c.passportNumber)===norm(documentNumber)||norm(c.document)===norm(documentNumber)))||(phone&&norm(c.phone)===norm(phone))||(email&&norm(c.email)===norm(email))||(name&&norm(c.fullName)===norm(name)));
             return client?.id||null;
+        }
+        async function ensureSharedClient(name,documentNumber,email,phone) {
+            const clients=localList('sqp_shared_clients');
+            const norm=s=>(s||'').toString().trim().toLocaleLowerCase();
+            const existing=clients.find(c=>(documentNumber&&(norm(c.passportNumber)===norm(documentNumber)||norm(c.document)===norm(documentNumber)))||(phone&&norm(c.phone)===norm(phone))||(email&&norm(c.email)===norm(email))||(name&&norm(c.fullName)===norm(name)));
+            if(existing) return existing.id;
+            const now=new Date().toISOString();
+            const id='cot-client-'+crypto.randomUUID();
+            const payload={id,fullName:name||'',firstName:(name||'').trim().split(/\\s+/)[0]||'',lastName:(name||'').trim().split(/\\s+/).slice(1).join(' '),passportNumber:documentNumber||'',document:documentNumber||'',email:email||'',phone:phone||'',nationality:'',issuingCountry:'',birthDate:'',expiryDate:'',sex:'',status:'ACTIVE',origin:'cotizador',createdAt:now,updatedAt:now};
+            const {error}=await sqpSupabase.from('sqp_app_data').insert({bucket:'clients',id,owner_id:currentAuthUserId,payload});
+            if(error) throw error;
+            clients.push({...payload,owner_id:currentAuthUserId});
+            localStorage.setItem('sqp_shared_clients',JSON.stringify(clients));
+            return id;
         }
         async function signOutSharedSession() { await sqpSupabase.auth.signOut(); }
 
@@ -2420,7 +2434,7 @@
             document.getElementById('summaryModal').classList.add('active');
         }
 
-        function confirmGenerate() {
+        async function confirmGenerate() {
             if (!pendingGenerate) return;
             const data = pendingGenerate;
             const clientName = document.getElementById('clientName').value.trim();
@@ -2439,7 +2453,7 @@
                     const newQuote = {
                         ...sanitizedData,
                         client: clientName,
-                        client_id: findSharedClientId(clientName, phone, email),
+                        client_id: sharedClientId,
                         idDoc: idDoc,
                         email: email,
                         phone: phone,
@@ -2461,6 +2475,7 @@
             const counter = incrementCounter();
             const year = new Date().getFullYear();
             const quoteNumber = `COT-${year}-${String(counter).padStart(4, '0')}`;
+            const sharedClientId = await ensureSharedClient(clientName, idDoc, email, phone);
 
             const quoteData = {
                 ...sanitizedData,
