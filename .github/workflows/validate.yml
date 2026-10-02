@@ -1,0 +1,32 @@
+name: Validate Cotizador
+on:
+  push:
+    branches: [main, integration/shared-supabase-auth-data, fix/cotizador-db-security-quality]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check app.js
+      - name: Check shared database and official SVG
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const html=fs.readFileSync('index.html','utf8');
+          const app=fs.readFileSync('app.js','utf8');
+          const svg=fs.readFileSync('logo.svg','utf8');
+          assert.ok(html.includes('src="app.js"') && html.includes('href="logo.svg"'));
+          assert.ok(html.includes('id="loginEmail"') && html.includes('id="sqpLogoSvg"'));
+          assert.ok(svg.includes('viewBox="0 0 1600 1465"') && svg.includes('#065687'));
+          assert.ok(app.includes('bcmzhicashtsdzlmqrif.supabase.co'));
+          assert.ok(!app.includes('fipcnxfxxngdjunrlbat.supabase.co'));
+          console.log('Validated shared Supabase configuration, login, and official SVG.');
+          NODE
