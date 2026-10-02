@@ -882,7 +882,7 @@
         <div id="loginScreen">
             <h2>🔐 Acceso al Sistema</h2>
             <div class="login-form">
-                <select id="loginUserSelect">
+                <select id="loginUserSelect" style="display:none">
                     <option value="">-- Seleccione usuario --</option>
                     <option value="Lic. Susana Sabalza">Lic. Susana Sabalza</option>
                     <option value="Lic. Eligmary Carrillo">Lic. Eligmary Carrillo</option>
@@ -894,11 +894,12 @@
                     <option value="Lic. Oscaris Ugas">Lic. Oscaris Ugas</option>
                     <option value="Lic. Linoska Ugas">Lic. Linoska Ugas</option>
                 </select>
-                <input type="password" id="loginPassword" placeholder="Contraseña" />
-                <div class="login-info">Si es su primer inicio, cree su contraseña.</div>
+                <input type="password" id="loginPassword" placeholder="Contraseña" style="display:none" />
+                <div class="login-info">Este cotizador usa la sesión corporativa de SQP. Abre el espacio unificado e inicia sesión con tu cuenta.</div>
+                <a href="https://web-sources-dv.github.io/para-legal-sqp/" target="_top" style="display:block;margin:1rem auto;padding:.8rem 1rem;max-width:24rem;text-align:center;border-radius:10px;background:#0B2545;color:#fff;text-decoration:none;font-weight:700">Abrir Espacio Unificado SQP</a>
                 <div id="loginError" style="color: #d0103a; min-height: 1.2rem;"></div>
-                <button class="login-btn" id="loginBtn">Ingresar</button>
-                <span class="forgot-password-link" id="forgotPasswordLink">¿Olvidaste tu contraseña?</span>
+                <button class="login-btn" id="loginBtn" style="display:none">Ingresar</button>
+                <span class="forgot-password-link" id="forgotPasswordLink" style="display:none">¿Olvidaste tu contraseña?</span>
             </div>
         </div>
 
