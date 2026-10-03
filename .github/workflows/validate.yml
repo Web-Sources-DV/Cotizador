@@ -15,6 +15,8 @@ jobs:
         with:
           node-version: 22
       - run: node --check app.js
+      - run: node --check supabase/functions/cotizador-users/handler.mjs
+      - run: node --test tests/users.test.mjs tests/users-ui.test.cjs
       - run: node --check usage-report.js
       - run: node --test tests/usage-report.test.cjs
       - name: Check shared database and official SVG

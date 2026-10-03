@@ -180,6 +180,8 @@
 
         // ---- SESIÓN ----
         function clearSession() {
+            document.getElementById('newUserPassword').value='';
+            document.getElementById('usersModal').classList.remove('active');
             usageReport.reset();
             currentAuthUserId = null;
             currentAuthRole = null;
@@ -384,6 +386,8 @@
         }
 
         function closeUsersModal() {
+            document.getElementById('newUserPassword').value='';
+            document.getElementById('newUserStatus').textContent='';
             document.getElementById('usersModal').classList.remove('active');
         }
 
@@ -401,24 +405,29 @@
                 details.textContent=(profile.name||profile.email)+' · '+profile.email+' · '+profile.role+(profile.active?'':' · INACTIVO');
                 const actions=document.createElement('div');
                 actions.style.cssText='display:flex;align-items:center;gap:.5rem';
-                const checkbox=document.createElement('input');
-                checkbox.type='checkbox'; checkbox.checked=profile.role==='ADMIN'; checkbox.disabled=!profile.active;
-                checkbox.title='Activar/desactivar rol de administrador';
-                checkbox.addEventListener('change',()=>toggleUserRole(profile.id,checkbox.checked));
-                const toggle=document.createElement('label'); toggle.className='toggle-switch'; toggle.append(checkbox,document.createElement('span'));
+                const roleSelect=document.createElement('select');
+                roleSelect.setAttribute('aria-label','Rol de '+(profile.name||profile.email));
+                for(const [value,label] of [['EXECUTIVE','Ejecutivo'],['ADMIN','Administrador'],['SUPERVISOR','Supervisor'],['VIEWER','Solo lectura']]) {
+                    const option=document.createElement('option');
+                    option.value=value; option.textContent=label; roleSelect.appendChild(option);
+                }
+                roleSelect.value=profile.role;
+                roleSelect.disabled=profile.id===currentAuthUserId;
+                roleSelect.addEventListener('change',()=>toggleUserRole(profile.id,roleSelect.value));
                 const state=document.createElement('button');
                 state.textContent=profile.active?'Desactivar':'Activar';
                 state.disabled=profile.id===currentAuthUserId;
                 state.addEventListener('click',()=>deleteUser(profile.id,profile.name||profile.email,profile.active));
-                actions.append(toggle,state); div.append(details,actions); container.append(div);
+                actions.append(roleSelect,state); div.append(details,actions); container.append(div);
             });
             const add=document.getElementById('addUserBtn');
-            if(add) add.textContent='Crear cuenta en Supabase Auth';
+            if(add) add.textContent='Crear usuario';
         }
 
-        async function toggleUserRole(profileId, isAdmin) {
+        async function toggleUserRole(profileId, role) {
             if(currentAuthRole!=='ADMIN') { alert('Acceso denegado.'); return; }
-            const {error}=await sqpSupabase.from('sqp_profiles').update({role:isAdmin?'ADMIN':'EXECUTIVE'}).eq('id',profileId);
+            if(profileId===currentAuthUserId || !['ADMIN','SUPERVISOR','EXECUTIVE','VIEWER'].includes(role)) return;
+            const {error}=await sqpSupabase.from('sqp_profiles').update({role}).eq('id',profileId);
             if(error) alert('No se pudo actualizar el perfil compartido: '+error.message);
             await renderUsersList();
         }
@@ -432,9 +441,40 @@
             await renderUsersList();
         }
 
-        function addUser() {
+        async function addUser() {
             if(currentAuthRole!=='ADMIN') { alert('Acceso denegado.'); return; }
-            alert('Crea o invita la cuenta desde Supabase Auth. Al crearla, aparecerá aquí como perfil compartido y el administrador podrá asignarle un rol.');
+            const name=document.getElementById('newUsername').value.trim();
+            const email=document.getElementById('newUserEmail').value.trim();
+            const password=document.getElementById('newUserPassword').value;
+            const role=document.getElementById('newUserRole').value;
+            const status=document.getElementById('newUserStatus');
+            const button=document.getElementById('addUserBtn');
+            if(button.disabled) return;
+            if(!name || !document.getElementById('newUserEmail').checkValidity() || !email ||
+               password.length<12 || password.length>128 || !['ADMIN','SUPERVISOR','EXECUTIVE','VIEWER'].includes(role)) {
+                status.textContent='Completa nombre, correo válido, rol y contraseña de 12 a 128 caracteres.';
+                return;
+            }
+            const requestingUser=currentAuthUserId;
+            button.disabled=true;
+            status.textContent='Creando usuario…';
+            try {
+                const {data,error}=await sqpSupabase.functions.invoke('cotizador-users',{body:{name,email,password,role}});
+                if(currentAuthUserId!==requestingUser || currentAuthRole!=='ADMIN') return;
+                if(error) {
+                    const detail=await error.context?.json?.().catch(()=>null);
+                    throw new Error(detail?.error||'No se pudo crear la cuenta. Comprueba la lista antes de reintentar.');
+                }
+                if(!data?.id) throw new Error('No se pudo confirmar la creación. Comprueba la lista antes de reintentar.');
+                document.getElementById('newUsername').value='';
+                document.getElementById('newUserEmail').value='';
+                status.textContent='Usuario creado. Puede iniciar sesión con el correo y la contraseña asignados.';
+                await renderUsersList();
+            } catch(error) { status.textContent=error.message||'No se pudo crear el usuario.'; }
+            finally {
+                document.getElementById('newUserPassword').value='';
+                button.disabled=false;
+            }
         }
 
         // ================================================================

@@ -21,3 +21,13 @@ Despliegue: aplicar una sola vez `supabase/usage-report.sql` mediante una migrac
 Validación: `node --check app.js`, `node --check usage-report.js`, `node --test tests/usage-report.test.cjs`. Ejecutar `tests/usage-report.sql` con una conexión administrativa de pruebas: utiliza fixtures en una transacción y finaliza con ROLLBACK. Comprueba promedios, fechas y rechazo de ejecutivos, otros administradores, usuarios inactivos y visitantes. No requiere paquetes npm ni un build: es una aplicación estática.
 
 Comprobación manual: entrar con la cuenta autorizada, abrir el reporte y cambiar fechas. Entrar con otro usuario y comprobar que no aparece el botón y que invocar `cotizador_usage_report` devuelve permiso denegado. Al cerrar sesión, el reporte y sus resultados se limpian. Para revertir la interfaz, publicar el commit previo; el esquema aditivo puede permanecer sin uso. No ejecutar de nuevo el setup completo ni restablecer usuarios durante el despliegue.
+
+## Gestión de usuarios dentro del Cotizador
+
+Los administradores activos pueden abrir **Usuarios** para crear una cuenta con nombre, correo, contraseña inicial y uno de los roles existentes: ADMIN, SUPERVISOR, EXECUTIVE o VIEWER. También pueden cambiar roles y activar/desactivar perfiles. La interfaz impide desactivar o cambiar el propio rol. La desactivación conserva los registros históricos. Como Cotizador y Score comparten identidad, estos cambios se aplican a ambas aplicaciones.
+
+La creación se ejecuta en la Edge Function `cotizador-users`. Valida el token con Supabase Auth y comprueba el perfil ADMIN activo en cada petición. Usa las variables de servidor SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY; ninguna clave privilegiada llega al navegador. La autenticación se comprueba dentro de la función (`verify_jwt=false`). El trigger existente crea el perfil; los correos duplicados producen un error y no modifican cuentas existentes.
+
+La contraseña inicial de una cuenta nueva requiere 12 a 128 caracteres y puede estar sujeta a requisitos adicionales de Auth. No se guarda en localStorage ni logs y se limpia al finalizar o cerrar. No se envían invitaciones por correo. Las contraseñas y sesiones existentes no se cambian con este despliegue.
+
+Desplegar primero `supabase/functions/cotizador-users/index.ts` junto con `handler.mjs` en el proyecto comercial; después publicar la interfaz. No ejecutar nuevamente setup.sql ni migrar usuarios. Pruebas: `node --test tests/users.test.mjs tests/users-ui.test.cjs`; usan servicios simulados y no crean cuentas reales.
