@@ -1,0 +1,518 @@
+/* ============================================================
+   VARIABLES CSS
+   ============================================================ */
+:root {
+    --primary: #0B759D;
+    --primary-dark: #003f88;
+    --gold: #B7A658;
+    --gold-light: #D4B85C;
+    --bg: #F8F8F8;
+    --card-bg: #ffffff;
+    --text: #1e293b;
+    --border: #e2e8f0;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    --radius: 20px;
+    --transition: 0.3s;
+}
+
+body.dark-mode {
+    --bg: #121212;
+    --card-bg: #1e1e1e;
+    --text: #e0e0e0;
+    --border: #444;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================================
+   RESET Y BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    transition: background var(--transition), color var(--transition);
+}
+
+.container {
+    max-width: 850px;
+    width: 100%;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: max-width 0.3s, padding 0.3s, background var(--transition);
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+#loginScreen {
+    padding: 2rem;
+    text-align: center;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#loginScreen h2 { color: var(--primary); margin-bottom: 1.5rem; }
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 320px;
+    margin: 0 auto;
+}
+.login-form select,
+.login-form input {
+    padding: 0.8rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    text-align: center;
+    background: var(--bg);
+    color: var(--text);
+}
+.login-btn {
+    background: var(--gold);
+    color: var(--primary-dark);
+    border: none;
+    padding: 0.8rem;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+.login-btn:hover { background: #a08c3a; color: white; }
+.login-info { font-size: 0.85rem; color: #555; margin-top: 0.5rem; }
+.forgot-password-link {
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    margin-top: 0.2rem;
+    display: inline-block;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--gold);
+    padding: 1.5rem 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, #d0103a, #d0103a 33%, #ffffff 33%, #ffffff 66%, var(--primary-dark) 66%, var(--primary-dark));
+}
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.header-logo { height: 70px; width: auto; }
+.header-text { text-align: center; }
+.header-text h1 { font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+.header-text .subtitle { font-size: 0.9rem; color: #ffffff; }
+
+.user-actions {
+    margin-top: 0.8rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.icon-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, 0.4); }
+.profile-pic-small {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold-light);
+}
+
+/* ============================================================
+   FORMULARIO
+   ============================================================ */
+.form-section { padding: 2rem 2rem 1rem; }
+.form-group { margin-bottom: 1.5rem; }
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--primary);
+}
+select, input[type="number"], input[type="text"], input[type="email"],
+input[type="tel"], input[type="search"], textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    font-family: inherit;
+}
+textarea { resize: vertical; min-height: 80px; }
+select:focus, input:focus, textarea:focus {
+    border-color: var(--primary);
+    background: var(--card-bg);
+    box-shadow: 0 0 0 3px rgba(11, 117, 157, 0.1);
+}
+
+.services-grid, .requirements-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-top: 0.3rem;
+}
+.service-item {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    padding: 0.5rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    border-left: 3px solid var(--gold);
+}
+.service-item input[type="checkbox"] {
+    width: 1rem; height: 1rem;
+    margin-right: 0.5rem;
+    accent-color: var(--gold);
+    cursor: pointer;
+}
+.service-item span { flex: 1; color: var(--primary); font-size: 0.9rem; }
+.service-price-input {
+    width: 80px;
+    margin-left: 0.3rem;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.4rem;
+    text-align: right;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    color: #1e293b;
+}
+
+.requirement-option {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    padding: 0.5rem 0.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    border-left: 3px solid var(--gold);
+    cursor: pointer;
+}
+.requirement-option input[type="checkbox"] {
+    width: 1rem; height: 1rem;
+    margin-right: 0.5rem;
+    accent-color: var(--gold);
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn {
+    background: var(--gold);
+    color: var(--primary-dark);
+    border: none;
+    padding: 0.9rem 2rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+.btn:hover { background: #a08c3a; color: white; }
+.btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+.btn-sm { padding: 0.4rem 1rem; font-size: 0.9rem; width: auto; margin-top: 0; }
+
+/* ============================================================
+   RESULTADO COTIZACIÓN
+   ============================================================ */
+.quote-result {
+    background: var(--bg);
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 0 2rem 2rem;
+    display: none;
+}
+.quote-result.active { display: block; }
+
+.quote-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: white;
+}
+.action-btn:hover { transform: scale(1.05); opacity: 0.9; }
+.btn-whatsapp { background: #25D366; }
+.btn-preview { background: var(--primary); }
+.btn-download { background: var(--primary-dark); }
+
+/* ============================================================
+   MODALES
+   ============================================================ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-overlay.active { display: flex; }
+.modal-content {
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 700px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: scale(0);
+    transition: transform 0.3s;
+}
+.modal-overlay.active .modal-content { transform: scale(1); }
+.modal-content button {
+    margin-top: 1rem;
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+.modal-content .close-btn { background: #888; }
+
+/* ============================================================
+   TABLAS
+   ============================================================ */
+.dashboard-table, .breakdown {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+.dashboard-table th, .dashboard-table td,
+.breakdown th, .breakdown td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.dashboard-table th, .breakdown th {
+    background: var(--primary);
+    color: white;
+}
+
+/* ============================================================
+   FILTROS
+   ============================================================ */
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.filter-row input, .filter-row select {
+    flex: 1 1 150px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* ============================================================
+   TOGGLE SWITCH
+   ============================================================ */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 24px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+input:checked+.slider { background-color: var(--gold); }
+input:checked+.slider:before { transform: translateX(20px); }
+
+/* ============================================================
+   BADGES DE ESTADO
+   ============================================================ */
+.status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.status-pendiente { background: #fbbf24; color: #1e293b; }
+.status-aprobada { background: #34d399; color: #1e293b; }
+.status-rechazada { background: #f87171; color: #1e293b; }
+.status-convertida { background: #60a5fa; color: #1e293b; }
+.status-enviada { background: #6ee7b7; color: #1e293b; }
+
+/* ============================================================
+   AYUDA
+   ============================================================ */
+.help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin: 1rem 0;
+}
+.help-section {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 1.2rem;
+    border: 1px solid var(--border);
+}
+.help-section h3 { color: var(--primary); margin-bottom: 0.8rem; }
+.help-section .support-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #25D366;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* ============================================================
+   SUGERENCIAS
+   ============================================================ */
+.suggestion-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0.5rem;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+.suggestion-item {
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0;
+}
+.suggestion-item .meta { font-size: 0.8rem; color: #64748b; }
+
+/* ============================================================
+   LOADER
+   ============================================================ */
+.loader-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+.loader-overlay.active { display: flex; }
+.loader-spinner {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid var(--gold);
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.loader-text { color: white; font-size: 1.2rem; font-weight: 600; }
+
+/* ============================================================
+   VISTA PREVIA PDF
+   ============================================================ */
+.preview-iframe {
+    width: 100%;
+    height: 70vh;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: white;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+    .services-grid, .requirements-grid, .help-grid { grid-template-columns: 1fr; }
+    .header-text h1 { font-size: 1.2rem; }
+    .quote-actions { flex-direction: column; }
+    .action-btn { width: 100%; justify-content: center; }
+    .modal-content { padding: 1.5rem; width: 95%; }
+}
