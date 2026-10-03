@@ -15,6 +15,8 @@ jobs:
         with:
           node-version: 22
       - run: node --check app.js
+      - run: node --check usage-report.js
+      - run: node --test tests/usage-report.test.cjs
       - name: Check shared database and official SVG
         run: |
           node --input-type=module <<'NODE'

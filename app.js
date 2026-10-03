@@ -180,6 +180,7 @@
 
         // ---- SESIÓN ----
         function clearSession() {
+            usageReport.reset();
             currentAuthUserId = null;
             currentAuthRole = null;
         }
@@ -1518,6 +1519,7 @@
                 document.getElementById('pdfLogoImg').src = dataUri;
             }).catch(() => {});
             checkProgrammerAccess();
+            usageReport.refreshAccess();
 
             // Cargar procedimientos desde data/procedures.json (opcional)
             fetch('data/procedures.json')

@@ -91,6 +91,7 @@
                     <span style="color:white; font-size:0.9rem;" id="currentUserDisplay"></span>
                     <button class="icon-btn" id="profileBtn" aria-label="Perfil">👤 Perfil</button>
                     <button class="icon-btn" id="adminDashboardBtn" style="display:none;" aria-label="Dashboard">📊 Dashboard</button>
+                    <button class="icon-btn" id="usageReportBtn" hidden aria-label="Uso por ejecutivo">📈 Uso por ejecutivo</button>
                     <button class="icon-btn" id="adminHistoryBtn" style="display:none;" aria-label="Historial">📋 Historial</button>
                     <button class="icon-btn" id="adminUsersBtn" style="display:none;" aria-label="Usuarios">⚙️ Usuarios</button>
                     <button class="icon-btn" id="followUpBtn" aria-label="Seguimiento">⏰ Seguimiento</button>
@@ -295,6 +296,27 @@
         </div>
     </div>
 
+    <!-- Uso por ejecutivo -->
+    <div class="modal-overlay" id="usageReportModal" role="dialog" aria-modal="true" aria-labelledby="usageReportTitle">
+        <div class="modal-content">
+            <h2 id="usageReportTitle">Uso por ejecutivo</h2>
+            <p>Cotizaciones guardadas por propietario. Fechas inclusivas, hora de Panamá. Las cotizaciones eliminadas o sin fecha válida no se cuentan.</p>
+            <div class="usage-report-filters">
+                <label>Desde <input type="date" id="usageReportStart" required /></label>
+                <label>Hasta <input type="date" id="usageReportEnd" required /></label>
+                <button id="usageReportRefresh">Consultar</button>
+            </div>
+            <p id="usageReportStatus" role="status" aria-live="polite"></p>
+            <div class="usage-report-table">
+                <table class="dashboard-table">
+                    <thead><tr><th scope="col">Ejecutivo</th><th scope="col">Estado</th><th scope="col">Total</th><th scope="col">Promedio diario</th></tr></thead>
+                    <tbody id="usageReportBody"></tbody>
+                </table>
+            </div>
+            <button id="usageReportClose">Cerrar</button>
+        </div>
+    </div>
+
     <!-- Perfil -->
     <div class="modal-overlay" id="profileModal">
         <div class="modal-content" style="max-width:450px;">
@@ -479,6 +501,7 @@
         </div>
     </div>
 
+    <script src="usage-report.js"></script>
     <script src="app.js"></script>
 
 </body>
