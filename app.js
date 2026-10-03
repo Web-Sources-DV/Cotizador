@@ -1593,7 +1593,7 @@
             document.getElementById('mainApp').style.display = 'none';
             resumeSharedSession().then(ok => {
                 if (ok) { document.getElementById('loginScreen').style.display='none'; showApp(); }
-                else document.getElementById('loginError').textContent='Abre primero la app SQP unificada e inicia sesión con tu cuenta corporativa.';
+                else document.getElementById('loginError').textContent='Inicia sesión con tu correo electrónico y contraseña.';
             }).catch(err => { console.error(err); document.getElementById('loginError').textContent=err.message||'Error al validar la cuenta.'; });
 
             // ---- CONSTRUIR LISTAS ----
