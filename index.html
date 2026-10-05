@@ -1062,8 +1062,7 @@
             const services = data.services || [];
             const subtotal = data.subtotal || 0;
             const discount = data.discount || 0;
-            const tax = subtotal * 0.07;
-            const total = subtotal + tax - discount;
+            const total = subtotal - discount;
             const requirements = data.requirements || [];
             const userObs = data.observations || '';
             const executive = data.executive || 'No asignado';
@@ -1087,16 +1086,7 @@
                         </tr>
                     `;
                 });
-                if (discount > 0) {
-                    servicesRows += `
-                        <tr>
-                            <td style="padding:8px; border:1px solid #ddd; color:#d0103a;">Descuento</td>
-                            <td style="padding:8px; text-align:center; border:1px solid #ddd;">1</td>
-                            <td style="padding:8px; text-align:right; border:1px solid #ddd;">-$${discount.toFixed(2)}</td>
-                            <td style="padding:8px; text-align:right; border:1px solid #ddd;">-$${discount.toFixed(2)}</td>
-                        </tr>
-                    `;
-                }
+
             }
 
             let reqHtml = '';
@@ -1115,7 +1105,7 @@
             observationsHtml += `<p style="margin: 0; font-size: 12px; color: #555; font-style: italic; background: #f9fbfd; padding: 8px; border-left: 3px solid #B7A658;">${FIXED_OBSERVATIONS_MESSAGE}</p>`;
 
             return `
-                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white; color: #1e293b;">
+                <div class="pdf-document" style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: white; color: #1e293b;">
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B759D; padding-bottom: 15px; margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 15px;">
                             ${logoHtml}
@@ -1168,10 +1158,6 @@
                             <tr>
                                 <td colspan="3" style="text-align: right; font-weight: bold; padding: 8px; border: 1px solid #ddd; background: #f9fbfd;">Subtotal:</td>
                                 <td style="text-align: right; padding: 8px; border: 1px solid #ddd; background: #f9fbfd;">$${subtotal.toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" style="text-align: right; font-weight: bold; padding: 8px; border: 1px solid #ddd; background: #f9fbfd;">Impuesto V.A. (7%):</td>
-                                <td style="text-align: right; padding: 8px; border: 1px solid #ddd; background: #f9fbfd;">$${tax.toFixed(2)}</td>
                             </tr>
                             ${discount > 0 ? `<tr>
                                 <td colspan="3" style="text-align: right; font-weight: bold; padding: 8px; border: 1px solid #ddd; background: #f9fbfd; color: #d0103a;">Descuento:</td>
@@ -1333,8 +1319,7 @@
             pendingGenerate = data;
 
             const summaryDiv = document.getElementById('summaryContent');
-            const tax = data.subtotal * 0.07;
-            const totalConIva = data.subtotal + tax - data.discount;
+            const totalFinal = data.subtotal - data.discount;
 
             let html = `
                 <p><strong>Cliente:</strong> ${escapeHtml(clientName)}</p>
@@ -1347,8 +1332,7 @@
             if (data.discount > 0) html += `<li>Descuento: -$${data.discount.toFixed(2)}</li>`;
             html += `</ul>
                 <p><strong>Subtotal:</strong> $${data.subtotal.toFixed(2)}</p>
-                <p><strong>IVA (7%):</strong> $${tax.toFixed(2)}</p>
-                <p><strong style="color:var(--gold); font-size:1.1rem;">TOTAL: $${totalConIva.toFixed(2)} USD</strong></p>
+                <p><strong style="color:var(--gold); font-size:1.1rem;">TOTAL: $${totalFinal.toFixed(2)} USD</strong></p>
             `;
             summaryDiv.innerHTML = html;
             document.getElementById('summaryModal').classList.add('active');
@@ -1382,14 +1366,12 @@
             const counter = incrementCounter();
             const year = new Date().getFullYear();
             const quoteNumber = `COT-${year}-${String(counter).padStart(4, '0')}`;
-            const tax = data.subtotal * 0.07;
 
             const quoteData = {
                 ...data,
                 client: clientName, client_id: clientId, email, phone,
                 quote_number: quoteNumber,
-                tax: tax,
-                total: data.subtotal + tax - data.discount,
+                total: data.subtotal - data.discount,
                 date: new Date().toISOString(),
                 reminder_sent: false
             };
@@ -1446,34 +1428,71 @@
             document.getElementById('loaderOverlay').classList.remove('active');
         }
 
-        function buildPdfFile() {
-            return new Promise((resolve, reject) => {
-                if (!lastQuoteData) { reject('No hay cotización'); return; }
-                showLoader('Generando PDF…');
-                const element = document.getElementById('printableQuote');
-                const clientName = lastQuoteData.client || 'SQP';
-                const sanitized = clientName.replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
-                const filename = `Presupuesto_${sanitized}.pdf`;
-                const opt = {
-                    margin: [0.5, 0.5, 0.5, 0.5],
-                    filename: filename,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, allowTaint: false, logging: false },
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-                    pagebreak: { mode: ['css', 'legacy'] }
-                };
-                html2pdf().set(opt).from(element).outputPdf('blob')
-                    .then(blob => {
-                        hideLoader();
-                        resolve(new File([blob], filename, { type: 'application/pdf' }));
-                    })
-                    .catch(err => {
-                        hideLoader();
-                        alert('❌ Error al generar el PDF: ' + err.message);
-                        reject(err);
-                    });
-            });
+        async function buildPdfFile() {
+    if (!lastQuoteData) throw new Error('No hay cotización');
+    showLoader('Generando PDF…');
+    // Render in a separate document: page scrolling, modals and responsive
+    // application styles must never shift or crop the PDF capture.
+    const host = document.createElement('iframe');
+    host.title = 'Preparación del PDF';
+    host.setAttribute('aria-hidden', 'true');
+    host.style.cssText = 'position:fixed;left:0;top:0;width:748px;height:1056px;border:0;z-index:-1;pointer-events:none;';
+    document.body.appendChild(host);
+    const pdfDocument = host.contentDocument;
+    pdfDocument.open();
+    pdfDocument.write('<!doctype html><html><head><meta charset="UTF-8"></head><body></body></html>');
+    pdfDocument.close();
+    const element = pdfDocument.createElement('div');
+    element.className = 'pdf-export';
+    element.innerHTML = generatePdfHTML(lastQuoteData);
+    const style = pdfDocument.createElement('style');
+    style.textContent = `
+        html, body { margin:0; padding:0; display:block; background:white; }
+        .pdf-export { width:748px; background:white; color:#1e293b; }
+        .pdf-export * { box-sizing:border-box; overflow-wrap:anywhere; }
+        .pdf-export > div { width:100%; max-width:none!important; padding:12px!important; }
+        .pdf-export p, .pdf-export li, .pdf-export td, .pdf-export th { font-size:11px!important; line-height:1.35!important; }
+        .pdf-export td, .pdf-export th { padding:5px!important; }
+        .pdf-export table { table-layout:fixed; margin-bottom:10px!important; }
+        .pdf-export h1, .pdf-export h2 { font-size:19px!important; }
+        .pdf-export img { max-width:100%; height:48px!important; }
+        .pdf-export tr, .pdf-export li, .pdf-export p { break-inside:avoid; page-break-inside:avoid; }
+        .pdf-export > div > div { margin-bottom:10px!important; }
+    `;
+    pdfDocument.head.appendChild(style);
+    pdfDocument.body.appendChild(element);
+    try {
+        await new Promise((resolve, reject) => {
+            const script = pdfDocument.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('No se pudo cargar la biblioteca PDF. Revise la conexión.'));
+            pdfDocument.head.appendChild(script);
+        });
+        const logo = element.querySelector('#pdfLogoImgInner');
+        if (logo) {
+            logo.src = await getPdfLogoDataUri();
+            await logo.decode().catch(() => {});
         }
+        await pdfDocument.fonts.ready;
+        const client = (lastQuoteData.client || 'SQP').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
+        const filename = `Presupuesto_${client}.pdf`;
+        const options = {
+            margin: [0.35, 0.35, 0.35, 0.35], filename,
+            image: { type:'jpeg', quality:0.98 },
+            html2canvas: { scale:2, useCORS:true, allowTaint:false, logging:false, scrollY:0 },
+            jsPDF: { unit:'in', format:'letter', orientation:'portrait' },
+            pagebreak: { mode:['css'], avoid:['tr','li','p'] }
+        };
+        // html2pdf checks arrays in its own window (iframe realm).
+        const pdfOptions = host.contentWindow.JSON.parse(JSON.stringify(options));
+        const blob = await host.contentWindow.html2pdf().set(pdfOptions).from(element).outputPdf('blob');
+        return new File([blob], filename, { type:'application/pdf' });
+    } finally {
+        host.remove();
+        hideLoader();
+    }
+}
 
         function downloadPdfFile(file) {
             const url = URL.createObjectURL(file);
