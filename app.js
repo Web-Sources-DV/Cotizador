@@ -1,7 +1,7 @@
 /**
  * ================================================================
  *  SQP LEGAL CONSULTING - Cotizador Jurídico
- *  JavaScript principal (versión final - sin IVA, 1 página, compacto)
+ *  JavaScript principal (versión final - sin IVA, 1 página, sin cortes)
  * ================================================================
  */
 
@@ -231,7 +231,7 @@ function getPdfLogoDataUri() {
 }
 
 // ================================================================
-//  GENERAR HTML DEL PDF (VERSIÓN COMPACTA - 1 SOLA PÁGINA, SIN IVA)
+//  GENERAR HTML DEL PDF (VERSIÓN ULTRA COMPACTA - 1 PÁGINA)
 // ================================================================
 function generatePdfHTML(data) {
     const clientName = data.client || 'No especificado';
@@ -251,76 +251,76 @@ function generatePdfHTML(data) {
 
     let servicesRows = '';
     if (services.length === 0) {
-        servicesRows = `<tr><td colspan="4" style="text-align:center; padding:6px; border:1px solid #ddd;">No hay servicios adicionales</td></tr>`;
+        servicesRows = `<tr><td colspan="4" style="text-align:center; padding:5px; border:1px solid #ddd; font-size:10px;">No hay servicios adicionales</td></tr>`;
     } else {
         services.forEach(s => {
             const price = s.price || 0;
             servicesRows += `<tr>
-                <td style="padding:6px 8px; border:1px solid #ddd; font-size: 11px;">${escapeHtml(s.name)}</td>
-                <td style="padding:6px 8px; text-align:center; border:1px solid #ddd; font-size: 11px;">1</td>
-                <td style="padding:6px 8px; text-align:right; border:1px solid #ddd; font-size: 11px;">$${price.toFixed(2)}</td>
-                <td style="padding:6px 8px; text-align:right; border:1px solid #ddd; font-size: 11px;">$${price.toFixed(2)}</td>
+                <td style="padding:5px 7px; border:1px solid #ddd; font-size:10px;">${escapeHtml(s.name)}</td>
+                <td style="padding:5px 7px; text-align:center; border:1px solid #ddd; font-size:10px;">1</td>
+                <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${price.toFixed(2)}</td>
+                <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${price.toFixed(2)}</td>
             </tr>`;
         });
         if (discount > 0) {
             servicesRows += `<tr>
-                <td style="padding:6px 8px; border:1px solid #ddd; color:#d0103a; font-size: 11px;">Descuento</td>
-                <td style="padding:6px 8px; text-align:center; border:1px solid #ddd; font-size: 11px;">1</td>
-                <td style="padding:6px 8px; text-align:right; border:1px solid #ddd; font-size: 11px;">-$${discount.toFixed(2)}</td>
-                <td style="padding:6px 8px; text-align:right; border:1px solid #ddd; font-size: 11px;">-$${discount.toFixed(2)}</td>
+                <td style="padding:5px 7px; border:1px solid #ddd; color:#d0103a; font-size:10px;">Descuento</td>
+                <td style="padding:5px 7px; text-align:center; border:1px solid #ddd; font-size:10px;">1</td>
+                <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">-$${discount.toFixed(2)}</td>
+                <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">-$${discount.toFixed(2)}</td>
             </tr>`;
         }
     }
 
     let reqHtml = requirements.length === 0
-        ? '<li style="margin-bottom:2px;">No se requieren documentos adicionales.</li>'
-        : requirements.map(r => `<li style="margin-bottom:2px;">${escapeHtml(r)}</li>`).join('');
+        ? '<li style="margin-bottom:1px; font-size:9px;">No se requieren documentos adicionales.</li>'
+        : requirements.map(r => `<li style="margin-bottom:1px; font-size:9px;">${escapeHtml(r)}</li>`).join('');
 
     let observationsHtml = '';
     if (userObs.trim()) {
-        observationsHtml += `<p style="margin: 0 0 5px 0; font-size: 10px; color: #333; white-space: pre-wrap;">${escapeHtml(userObs)}</p>`;
+        observationsHtml += `<p style="margin: 0 0 4px 0; font-size: 9px; color: #333; white-space: pre-wrap;">${escapeHtml(userObs)}</p>`;
     }
-    observationsHtml += `<p style="margin: 0; font-size: 10px; color: #555; font-style: italic; background: #f9fbfd; padding: 6px 8px; border-left: 3px solid #B7A658;">${FIXED_OBSERVATIONS_MESSAGE}</p>`;
+    observationsHtml += `<p style="margin: 0; font-size: 9px; color: #555; font-style: italic; background: #f9fbfd; padding: 5px 7px; border-left: 3px solid #B7A658;">${FIXED_OBSERVATIONS_MESSAGE}</p>`;
 
     return `
-        <div style="font-family: Arial, sans-serif; width: 750px; padding: 15px; background: #ffffff; color: #1e293b; box-sizing: border-box;">
+        <div style="font-family: Arial, sans-serif; width: 720px; padding: 12px; background: #ffffff; color: #1e293b; box-sizing: border-box;">
 
             <!-- ENCABEZADO -->
-            <table style="width: 100%; border-collapse: collapse; border-bottom: 3px solid #0B759D; margin-bottom: 12px;">
+            <table style="width: 100%; border-collapse: collapse; border-bottom: 2px solid #0B759D; margin-bottom: 10px;">
                 <tr>
-                    <td style="width: 60%; vertical-align: middle; padding-bottom: 8px;">
+                    <td style="width: 60%; vertical-align: middle; padding-bottom: 6px;">
                         <table style="border-collapse: collapse;">
                             <tr>
-                                <td style="vertical-align: middle; padding-right: 10px;">
-                                    <img id="pdfLogoImgInner" style="height: 45px; width: auto; display: block;" alt="SQP" />
+                                <td style="vertical-align: middle; padding-right: 8px;">
+                                    <img id="pdfLogoImgInner" style="height: 40px; width: auto; display: block;" alt="SQP" />
                                 </td>
                                 <td style="vertical-align: middle;">
-                                    <div style="color: #0B759D; font-size: 16px; font-weight: bold; line-height: 1.2;">SQP LEGAL CONSULTING</div>
-                                    <div style="font-size: 10px; color: #555555; line-height: 1.2;">Abogados &amp; Consultores Jurídicos</div>
+                                    <div style="color: #0B759D; font-size: 15px; font-weight: bold; line-height: 1.2;">SQP LEGAL CONSULTING</div>
+                                    <div style="font-size: 9px; color: #555555; line-height: 1.2;">Abogados &amp; Consultores Jurídicos</div>
                                 </td>
                             </tr>
                         </table>
                     </td>
-                    <td style="width: 40%; vertical-align: middle; text-align: right; padding-bottom: 8px;">
-                        <div style="color: #B7A658; font-size: 20px; font-weight: bold; line-height: 1.2;">COTIZACIÓN</div>
-                        <div style="font-size: 11px; color: #555555; line-height: 1.2;">Nº: <strong>${escapeHtml(quoteNumber)}</strong></div>
+                    <td style="width: 40%; vertical-align: middle; text-align: right; padding-bottom: 6px;">
+                        <div style="color: #B7A658; font-size: 18px; font-weight: bold; line-height: 1.2;">COTIZACIÓN</div>
+                        <div style="font-size: 10px; color: #555555; line-height: 1.2;">Nº: <strong>${escapeHtml(quoteNumber)}</strong></div>
                     </td>
                 </tr>
             </table>
 
             <!-- DATOS FIRMA Y CLIENTE -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 10px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9px;">
                 <tr>
-                    <td style="width: 50%; vertical-align: top; border: 1px solid #dddddd; padding: 8px; background: #f9fbfd;">
-                        <div style="color: #0B759D; font-size: 10px; font-weight: bold; margin-bottom: 4px;">DATOS DE LA FIRMA JURÍDICA:</div>
+                    <td style="width: 50%; vertical-align: top; border: 1px solid #dddddd; padding: 6px; background: #f9fbfd;">
+                        <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 3px;">DATOS DE LA FIRMA JURÍDICA:</div>
                         <strong>RUC / Céd. Jurídica:</strong> 3-101-892341-20<br>
                         <strong>Teléfono:</strong> +506 2201-9000<br>
                         <strong>Correo:</strong> cotizaciones@sqplegal.com<br>
                         <strong>Fecha Emisión:</strong> ${date}<br>
                         <strong>Ejecutivo:</strong> ${escapeHtml(executive)}
                     </td>
-                    <td style="width: 50%; vertical-align: top; border: 1px solid #dddddd; padding: 8px; background: #f9fbfd;">
-                        <div style="color: #0B759D; font-size: 10px; font-weight: bold; margin-bottom: 4px;">DATOS DEL CLIENTE:</div>
+                    <td style="width: 50%; vertical-align: top; border: 1px solid #dddddd; padding: 6px; background: #f9fbfd;">
+                        <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 3px;">DATOS DEL CLIENTE:</div>
                         <strong>Cliente:</strong> ${escapeHtml(clientName)}<br>
                         <strong>Identificación:</strong> ${escapeHtml(clientId)}<br>
                         <strong>Teléfono:</strong> ${escapeHtml(clientPhone)}<br>
@@ -330,55 +330,55 @@ function generatePdfHTML(data) {
             </table>
 
             <!-- ASUNTO -->
-            <p style="font-weight: bold; font-size: 12px; margin: 0 0 8px 0; color: #0B759D;">
+            <p style="font-weight: bold; font-size: 11px; margin: 0 0 6px 0; color: #0B759D;">
                 ASUNTO / TRÁMITE: <span style="color: #1e293b;">${escapeHtml(procedure)}</span>
             </p>
 
             <!-- TABLA DE SERVICIOS -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;">
                 <thead>
                     <tr style="background: #0B759D; color: #ffffff;">
-                        <th style="padding: 7px 8px; text-align: left; border: 1px solid #0B759D;">DESCRIPCIÓN DEL SERVICIO</th>
-                        <th style="padding: 7px 8px; text-align: center; border: 1px solid #0B759D; width: 50px;">CANT</th>
-                        <th style="padding: 7px 8px; text-align: right; border: 1px solid #0B759D; width: 100px;">PRECIO UNIT</th>
-                        <th style="padding: 7px 8px; text-align: right; border: 1px solid #0B759D; width: 100px;">SUBTOTAL</th>
+                        <th style="padding: 6px 7px; text-align: left; border: 1px solid #0B759D; font-size:10px;">DESCRIPCIÓN DEL SERVICIO</th>
+                        <th style="padding: 6px 7px; text-align: center; border: 1px solid #0B759D; width: 45px; font-size:10px;">CANT</th>
+                        <th style="padding: 6px 7px; text-align: right; border: 1px solid #0B759D; width: 95px; font-size:10px;">PRECIO UNIT</th>
+                        <th style="padding: 6px 7px; text-align: right; border: 1px solid #0B759D; width: 95px; font-size:10px;">SUBTOTAL</th>
                     </tr>
                 </thead>
                 <tbody>${servicesRows}</tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3" style="text-align: right; font-weight: bold; padding: 7px 8px; border: 1px solid #0B759D; background: #e8f0f5; font-size: 11px;">TOTAL A PAGAR:</td>
-                        <td style="text-align: right; font-weight: bold; padding: 7px 8px; border: 1px solid #0B759D; background: #e8f0f5; color: #0B759D; font-size: 11px;">$${total.toFixed(2)}</td>
+                        <td colspan="3" style="text-align: right; font-weight: bold; padding: 6px 7px; border: 1px solid #0B759D; background: #e8f0f5; font-size: 11px;">TOTAL A PAGAR:</td>
+                        <td style="text-align: right; font-weight: bold; padding: 6px 7px; border: 1px solid #0B759D; background: #e8f0f5; color: #0B759D; font-size: 11px;">$${total.toFixed(2)}</td>
                     </tr>
                 </tfoot>
             </table>
 
             <!-- REQUISITOS -->
-            <div style="margin-bottom: 10px;">
-                <div style="color: #0B759D; font-size: 10px; font-weight: bold; margin-bottom: 3px;">REQUISITOS Y DOCUMENTACIÓN REQUERIDA:</div>
-                <ul style="margin: 3px 0 0 18px; padding-left: 0; list-style-type: disc; font-size: 10px;">${reqHtml}</ul>
+            <div style="margin-bottom: 8px;">
+                <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 2px;">REQUISITOS Y DOCUMENTACIÓN REQUERIDA:</div>
+                <ul style="margin: 2px 0 0 16px; padding-left: 0; list-style-type: disc;">${reqHtml}</ul>
             </div>
 
             <!-- OBSERVACIONES -->
-            <div style="margin-bottom: 10px;">
-                <div style="color: #0B759D; font-size: 10px; font-weight: bold; margin-bottom: 3px;">OBSERVACIONES Y CONDICIONES:</div>
-                <div style="margin-top: 4px;">${observationsHtml}</div>
+            <div style="margin-bottom: 8px;">
+                <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 2px;">OBSERVACIONES Y CONDICIONES:</div>
+                <div style="margin-top: 3px;">${observationsHtml}</div>
             </div>
 
             <!-- MÉTODOS DE PAGO -->
-            <div style="margin-bottom: 10px;">
-                <div style="color: #0B759D; font-size: 10px; font-weight: bold; margin-bottom: 3px;">MÉTODOS DE PAGO:</div>
-                <div style="font-size: 9px; line-height: 1.5; margin-top: 4px; background: #f9fbfd; padding: 8px; border-left: 3px solid #0B759D;">
-                    <p style="margin: 2px 0;"><strong>Banco Nacional de Panamá</strong> — Cuenta de Ahorro — Titular: SQP Legal Consulting — Cuenta: 10000346515</p>
-                    <p style="margin: 2px 0;"><strong>Banco Aliado</strong> — Cuenta de Ahorro — Titular: SQP Legal Consulting — Cuenta: 8200012913</p>
-                    <p style="margin: 4px 0 0 0; font-size: 8px; color: #666666;"><em>Si tu banco solicita más dígitos, agrega dos (2) ceros al inicio del número de cuenta.</em></p>
-                    <p style="margin: 4px 0 0 0; font-weight: 600;">Importante: Una vez realizado el pago, envía el comprobante para confirmar y agilizar el proceso.</p>
-                    <p style="margin: 3px 0 0 0; font-style: italic; color: #B7A658;">¡Gracias por su confianza!</p>
+            <div style="margin-bottom: 8px;">
+                <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 2px;">MÉTODOS DE PAGO:</div>
+                <div style="font-size: 8px; line-height: 1.4; margin-top: 3px; background: #f9fbfd; padding: 6px 7px; border-left: 3px solid #0B759D;">
+                    <p style="margin: 1px 0;"><strong>Banco Nacional de Panamá</strong> — Cuenta de Ahorro — Titular: SQP Legal Consulting — Cuenta: 10000346515</p>
+                    <p style="margin: 1px 0;"><strong>Banco Aliado</strong> — Cuenta de Ahorro — Titular: SQP Legal Consulting — Cuenta: 8200012913</p>
+                    <p style="margin: 3px 0 0 0; font-size: 7px; color: #666666;"><em>Si tu banco solicita más dígitos, agrega dos (2) ceros al inicio del número de cuenta.</em></p>
+                    <p style="margin: 3px 0 0 0; font-weight: 600;">Importante: Una vez realizado el pago, envía el comprobante para confirmar y agilizar el proceso.</p>
+                    <p style="margin: 2px 0 0 0; font-style: italic; color: #B7A658;">¡Gracias por su confianza!</p>
                 </div>
             </div>
 
             <!-- PIE DE PÁGINA -->
-            <div style="border-top: 1px solid #dddddd; margin-top: 12px; padding-top: 8px; text-align: center; font-size: 9px; color: #666666;">
+            <div style="border-top: 1px solid #dddddd; margin-top: 10px; padding-top: 6px; text-align: center; font-size: 8px; color: #666666;">
                 Esta cotización será válida por 30 días calendario.
                 <br>
                 <span style="color: #B7A658;">SQP LEGAL CONSULTING</span> - Tel: +506 2201-9000 - cotizaciones@sqplegal.com
@@ -506,7 +506,7 @@ function showSummary() {
     pendingGenerate = data;
 
     const summaryDiv = document.getElementById('summaryContent');
-    const totalFinal = data.subtotal - data.discount; // ✅ Sin IVA
+    const totalFinal = data.subtotal - data.discount;
 
     let html = `
         <p><strong>Cliente:</strong> ${escapeHtml(clientName)}</p>
@@ -558,7 +558,7 @@ function confirmGenerate() {
         ...data,
         client: clientName, client_id: clientId, email, phone,
         quote_number: quoteNumber,
-        total: data.subtotal - data.discount, // ✅ Sin IVA
+        total: data.subtotal - data.discount,
         date: new Date().toISOString(),
         reminder_sent: false
     };
@@ -605,7 +605,7 @@ function resetForm() {
 }
 
 // ================================================================
-//  PDF (COMPACTO - 1 PÁGINA)
+//  PDF — CAPTURA COMPLETA + ESCALADO A 1 PÁGINA (SIN CORTES)
 // ================================================================
 function showLoader(text = 'Generando PDF…') {
     document.getElementById('loaderText').textContent = text;
@@ -621,36 +621,20 @@ function buildPdfFile() {
         showLoader('Generando PDF…');
 
         const element = document.getElementById('printableQuote');
+
+        // ✅ Forzar visibilidad total
         const originalDisplay = element.style.display;
         element.style.display = 'block';
         element.style.visibility = 'visible';
         element.style.position = 'relative';
         element.style.background = '#ffffff';
+        element.style.width = '720px';
 
         const clientName = lastQuoteData.client || 'SQP';
         const sanitized = clientName.replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
         const filename = `Presupuesto_${sanitized}.pdf`;
 
-        const opt = {
-            margin: [0.3, 0.3, 0.3, 0.3],
-            filename: filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                letterRendering: true,
-                allowTaint: false,
-                logging: false,
-                backgroundColor: '#ffffff',
-                width: 750,
-                windowWidth: 750,
-                scrollX: 0,
-                scrollY: 0
-            },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'] }
-        };
-
+        // ✅ Esperar a que el logo cargue completamente
         const waitForLogo = () => new Promise(res => {
             const logo = document.getElementById('pdfLogoImgInner');
             if (!logo || !logo.src) { res(); return; }
@@ -661,9 +645,61 @@ function buildPdfFile() {
         });
 
         waitForLogo()
-            .then(() => new Promise(res => setTimeout(res, 300)))
-            .then(() => html2pdf().set(opt).from(element).outputPdf('blob'))
-            .then(blob => {
+            .then(() => new Promise(res => setTimeout(res, 500)))
+            .then(() => {
+                // ✅ Capturar TODO el contenido como imagen (una sola pieza)
+                return html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0,
+                    width: element.scrollWidth,
+                    height: element.scrollHeight,
+                    windowWidth: element.scrollWidth,
+                    windowHeight: element.scrollHeight
+                });
+            })
+            .then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+                // ✅ Crear PDF con jsPDF directamente (evita cortes)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'letter'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();   // 215.9 mm
+                const pageHeight = pdf.internal.pageSize.getHeight(); // 279.4 mm
+
+                // Márgenes de 8mm a cada lado
+                const margin = 8;
+                const availableWidth = pageWidth - (margin * 2);
+                const availableHeight = pageHeight - (margin * 2);
+
+                // Escalar la imagen proporcionalmente
+                const imgRatio = canvas.height / canvas.width;
+                let finalWidth = availableWidth;
+                let finalHeight = finalWidth * imgRatio;
+
+                // Si es más alto que la página, escalar por altura
+                if (finalHeight > availableHeight) {
+                    finalHeight = availableHeight;
+                    finalWidth = finalHeight / imgRatio;
+                }
+
+                // Centrar horizontalmente
+                const x = (pageWidth - finalWidth) / 2;
+                const y = margin;
+
+                // ✅ Añadir toda la imagen en 1 sola página
+                pdf.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
+
+                const blob = pdf.output('blob');
                 element.style.display = originalDisplay;
                 hideLoader();
                 resolve(new File([blob], filename, { type: 'application/pdf' }));
@@ -671,6 +707,7 @@ function buildPdfFile() {
             .catch(err => {
                 element.style.display = originalDisplay;
                 hideLoader();
+                console.error('Error PDF:', err);
                 alert('❌ Error al generar el PDF: ' + err.message);
                 reject(err);
             });
