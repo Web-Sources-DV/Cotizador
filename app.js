@@ -390,20 +390,78 @@ function generatePdfHTML(data) {
 // ================================================================
 //  LOGIN
 // ================================================================
+
+function updateLoginPasswordField() {
+    const noPassword = document.getElementById('loginUserSelect').value === 'Lic. Daryl Villa';
+    const input = document.getElementById('loginPassword');
+    input.disabled = noPassword;
+    input.hidden = noPassword;
+    if (noPassword) input.value = '';
+}
+
+function usageDay(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Panama', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(date);
+}
+
+function openDailyUsage() {
+    if (currentUser !== 'Lic. Daryl Villa') return;
+    document.getElementById('dailyUsageDate').value = usageDay(Date.now());
+    renderDailyUsage();
+    document.getElementById('dailyUsageModal').classList.add('active');
+}
+
+function renderDailyUsage() {
+    if (currentUser !== 'Lic. Daryl Villa') return;
+    const day = document.getElementById('dailyUsageDate').value;
+    const counts = new Map(Object.keys(getUsers()).map(name => [name, 0]));
+    let total = 0;
+    getQuotes().forEach(quote => {
+        if (usageDay(quote.date) !== day || !quote.executive) return;
+        counts.set(quote.executive, (counts.get(quote.executive) || 0) + 1);
+        total++;
+    });
+    document.getElementById('dailyUsageTotal').textContent = total
+        ? `${total} cotizaciones registradas en este navegador.`
+        : 'Sin cotizaciones registradas para este día.';
+    const rows = document.getElementById('dailyUsageRows');
+    rows.replaceChildren();
+    for (const [name, count] of counts) {
+        const percentage = total ? count * 100 / total : 0;
+        const row = document.createElement('div');
+        row.style.marginBottom = '1rem';
+        const label = document.createElement('div');
+        label.textContent = `${name}: ${percentage.toFixed(1)}% (${count})`;
+        const bar = document.createElement('progress');
+        bar.max = 100;
+        bar.value = percentage;
+        bar.style.width = '100%';
+        bar.setAttribute('aria-label', label.textContent);
+        row.append(label, bar);
+        rows.appendChild(row);
+    }
+}
+
 async function handleLogin() {
     const username = document.getElementById('loginUserSelect').value;
     const password = document.getElementById('loginPassword').value;
     const errorDiv = document.getElementById('loginError');
 
     if (!username) { errorDiv.textContent = 'Seleccione un usuario.'; return; }
-    if (!password) { errorDiv.textContent = 'Ingrese una contraseña.'; return; }
+    if (username !== 'Lic. Daryl Villa' && !password) { errorDiv.textContent = 'Ingrese una contraseña.'; return; }
 
     const users = getUsers();
     const user = users[username];
     if (!user) { errorDiv.textContent = 'Usuario no válido.'; return; }
 
     try {
-        if (user.password === null || user.password === undefined) {
+        if (username === 'Lic. Daryl Villa') {
+                    user.password = null;
+                    user.salt = null;
+                    saveUsers(users);
+                } else if (user.password === null || user.password === undefined) {
             const { hash, salt } = await hashPassword(password);
             user.password = hash;
             user.salt = salt;
@@ -431,6 +489,7 @@ async function handleLogin() {
 }
 
 function handleLogout() {
+            document.getElementById('dailyUsageModal').classList.remove('active');
     currentUser = null;
     currentRole = null;
     clearSession();
@@ -457,6 +516,8 @@ function showApp() {
     document.getElementById('currentUserDisplay').textContent =
         `${currentUser} (${currentRole === 'admin' ? 'Administrador' : 'Ejecutivo'})`;
     const isAdmin = (currentRole === 'admin');
+            document.getElementById('dailyUsageBtn').style.display = currentUser === 'Lic. Daryl Villa' ? 'inline-flex' : 'none';
+            document.getElementById('dailyUsageModal').classList.remove('active');
     document.getElementById('adminDashboardBtn').style.display = isAdmin ? 'inline-flex' : 'none';
     document.getElementById('adminHistoryBtn').style.display = isAdmin ? 'inline-flex' : 'none';
     document.getElementById('adminUsersBtn').style.display = isAdmin ? 'inline-flex' : 'none';
