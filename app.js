@@ -615,106 +615,73 @@ function hideLoader() {
     document.getElementById('loaderOverlay').classList.remove('active');
 }
 
-function buildPdfFile() {
-    return new Promise((resolve, reject) => {
-        if (!lastQuoteData) { reject('No hay cotización'); return; }
-        showLoader('Generando PDF…');
-
-        const element = document.getElementById('printableQuote');
-
-        // ✅ Forzar visibilidad total
-        const originalDisplay = element.style.display;
-        element.style.display = 'block';
-        element.style.visibility = 'visible';
-        element.style.position = 'relative';
-        element.style.background = '#ffffff';
-        element.style.width = '720px';
-
-        const clientName = lastQuoteData.client || 'SQP';
-        const sanitized = clientName.replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
-        const filename = `Presupuesto_${sanitized}.pdf`;
-
-        // ✅ Esperar a que el logo cargue completamente
-        const waitForLogo = () => new Promise(res => {
-            const logo = document.getElementById('pdfLogoImgInner');
-            if (!logo || !logo.src) { res(); return; }
-            if (logo.complete && logo.naturalWidth > 0) { res(); return; }
-            logo.onload = res;
-            logo.onerror = res;
-            setTimeout(res, 2500);
+async function buildPdfFile() {
+    if (!lastQuoteData) throw new Error('No hay cotización');
+    showLoader('Generando PDF…');
+    // Render in a separate document: page scrolling, modals and responsive
+    // application styles must never shift or crop the PDF capture.
+    const host = document.createElement('iframe');
+    host.title = 'Preparación del PDF';
+    host.setAttribute('aria-hidden', 'true');
+    host.style.cssText = 'position:fixed;left:0;top:0;width:748px;height:1056px;border:0;z-index:-1;pointer-events:none;';
+    document.body.appendChild(host);
+    const pdfDocument = host.contentDocument;
+    pdfDocument.open();
+    pdfDocument.write('<!doctype html><html><head><meta charset="UTF-8"></head><body></body></html>');
+    pdfDocument.close();
+    const element = pdfDocument.createElement('div');
+    element.className = 'pdf-export';
+    element.innerHTML = generatePdfHTML(lastQuoteData);
+    const style = pdfDocument.createElement('style');
+    style.textContent = `
+        html, body { margin:0; padding:0; display:block; background:white; }
+        .pdf-export { width:748px; background:white; color:#1e293b; }
+        .pdf-export * { box-sizing:border-box; overflow-wrap:anywhere; }
+        .pdf-export > div { width:100%; max-width:none!important; padding:12px!important; }
+        .pdf-export p, .pdf-export li, .pdf-export td, .pdf-export th { font-size:11px!important; line-height:1.35!important; }
+        .pdf-export td, .pdf-export th { padding:5px!important; }
+        .pdf-export table { table-layout:fixed; margin-bottom:10px!important; }
+        .pdf-export h1, .pdf-export h2 { font-size:19px!important; }
+        .pdf-export img { max-width:100%; height:48px!important; }
+        .pdf-export tr, .pdf-export li, .pdf-export p { break-inside:avoid; page-break-inside:avoid; }
+        .pdf-export > div > div { margin-bottom:10px!important; }
+    `;
+    pdfDocument.head.appendChild(style);
+    pdfDocument.body.appendChild(element);
+    try {
+        await new Promise((resolve, reject) => {
+            const script = pdfDocument.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('No se pudo cargar la biblioteca PDF. Revise la conexión.'));
+            pdfDocument.head.appendChild(script);
         });
-
-        waitForLogo()
-            .then(() => new Promise(res => setTimeout(res, 500)))
-            .then(() => {
-                // ✅ Capturar TODO el contenido como imagen (una sola pieza)
-                return html2canvas(element, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    logging: false,
-                    scrollX: 0,
-                    scrollY: 0,
-                    width: element.scrollWidth,
-                    height: element.scrollHeight,
-                    windowWidth: element.scrollWidth,
-                    windowHeight: element.scrollHeight
-                });
-            })
-            .then(canvas => {
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-                // ✅ Crear PDF con jsPDF directamente (evita cortes)
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'letter'
-                });
-
-                const pageWidth = pdf.internal.pageSize.getWidth();   // 215.9 mm
-                const pageHeight = pdf.internal.pageSize.getHeight(); // 279.4 mm
-
-                // Márgenes de 8mm a cada lado
-                const margin = 8;
-                const availableWidth = pageWidth - (margin * 2);
-                const availableHeight = pageHeight - (margin * 2);
-
-                // Escalar la imagen proporcionalmente
-                const imgRatio = canvas.height / canvas.width;
-                let finalWidth = availableWidth;
-                let finalHeight = finalWidth * imgRatio;
-
-                // Si es más alto que la página, escalar por altura
-                if (finalHeight > availableHeight) {
-                    finalHeight = availableHeight;
-                    finalWidth = finalHeight / imgRatio;
-                }
-
-                // Centrar horizontalmente
-                const x = (pageWidth - finalWidth) / 2;
-                const y = margin;
-
-                // ✅ Añadir toda la imagen en 1 sola página
-                pdf.addImage(imgData, 'JPEG', x, y, finalWidth, finalHeight);
-
-                const blob = pdf.output('blob');
-                element.style.display = originalDisplay;
-                hideLoader();
-                resolve(new File([blob], filename, { type: 'application/pdf' }));
-            })
-            .catch(err => {
-                element.style.display = originalDisplay;
-                hideLoader();
-                console.error('Error PDF:', err);
-                alert('❌ Error al generar el PDF: ' + err.message);
-                reject(err);
-            });
-    });
+        const logo = element.querySelector('#pdfLogoImgInner');
+        if (logo) {
+            logo.src = await getPdfLogoDataUri();
+            await logo.decode().catch(() => {});
+        }
+        await pdfDocument.fonts.ready;
+        const client = (lastQuoteData.client || 'SQP').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
+        const filename = `Presupuesto_${client}.pdf`;
+        const options = {
+            margin: [0.35, 0.35, 0.35, 0.35], filename,
+            image: { type:'jpeg', quality:0.98 },
+            html2canvas: { scale:2, useCORS:true, allowTaint:false, logging:false, scrollY:0 },
+            jsPDF: { unit:'in', format:'letter', orientation:'portrait' },
+            pagebreak: { mode:['css'], avoid:['tr','li','p'] }
+        };
+        // html2pdf checks arrays in its own window (iframe realm).
+        const pdfOptions = host.contentWindow.JSON.parse(JSON.stringify(options));
+        const blob = await host.contentWindow.html2pdf().set(pdfOptions).from(element).outputPdf('blob');
+        return new File([blob], filename, { type:'application/pdf' });
+    } finally {
+        host.remove();
+        hideLoader();
+    }
 }
 
-function downloadPdfFile(file) {
+        function downloadPdfFile(file) {
     const url = URL.createObjectURL(file);
     const a = document.createElement('a');
     a.href = url;
