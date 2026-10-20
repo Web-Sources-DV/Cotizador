@@ -770,35 +770,41 @@ function getSignature() {
     return user.signature || 'Saludos cordiales,\nSQP LEGAL CONSULTING.';
 }
 
+function normalizeWhatsAppPhone(value) {
+    const phone = String(value || '').trim();
+    if (!phone || !/^\+?[\d\s().-]+$/.test(phone)) return null;
+    const explicitInternational = phone.startsWith('+') || phone.startsWith('00');
+    let digits = phone.replace(/\D/g, '');
+    if (phone.startsWith('00')) digits = digits.slice(2);
+    // The client form defaults to Panama. Other countries need their country code.
+    if (!explicitInternational && digits.length === 8) digits = '507' + digits;
+    if (!/^[1-9]\d{9,14}$/.test(digits)) return null;
+    if (digits.startsWith('507') && digits.length !== 11) return null;
+    return digits;
+}
+
 function sendWhatsApp() {
     if (!lastQuoteData) { alert('Genere una cotización primero.'); return; }
-    const phone = (lastQuoteData.phone || '').replace(/[^0-9+]/g, '');
-    let cleanPhone = phone.replace(/^\+/, '').replace(/\s/g, '');
-    if (!cleanPhone) { alert('El cliente no tiene un número de teléfono válido.'); return; }
-
+    const phone = normalizeWhatsAppPhone(lastQuoteData.phone);
+    if (!phone) {
+        alert('Ingrese un teléfono válido en la cotización: 8 dígitos para Panamá o el número completo con código de país (ej. +507 6000-0000). Después confirme nuevamente la cotización.');
+        return;
+    }
     const client = lastQuoteData.client || 'Cliente';
     const total = (lastQuoteData.total || 0).toFixed(2);
     const procedure = lastQuoteData.procedure;
-    const signature = getSignature();
+    const signature = getUsers()[currentUser]?.signature || 'Saludos cordiales,\nSQP LEGAL CONSULTING.';
     const msg = `Hola ${client}, te comparto el presupuesto para "${procedure}" con un total de $${total} USD.\n\n${signature}`;
-
-    const markSent = confirm('¿Marcar esta cotización como ENVIADA en el historial?');
-    if (markSent && lastQuoteData.quote_number) {
-        const quotes = getQuotes();
-        const idx = quotes.findIndex(q => q.quote_number === lastQuoteData.quote_number);
-        if (idx !== -1) {
-            quotes[idx].status = 'enviada';
-            saveQuotes(quotes);
-            lastQuoteData.status = 'enviada';
-        }
-    }
-
-    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
-    alert('📎 Recuerda descargar el PDF con el botón "📥 Descargar PDF" y adjuntarlo manualmente al chat.');
+    // Universal link keeps the recipient on mobile, desktop app and WhatsApp Web.
+    // Open immediately in the click handler, before dialogs or asynchronous work.
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    const chat = window.open(url, '_blank');
+    if (chat) chat.opener = null;
+    else window.location.assign(url);
+    // Opening a chat does not prove a message was sent; keep its status unchanged.
 }
 
-// ================================================================
+        // ================================================================
 //  VISTA PREVIA
 // ================================================================
 function openPreview() {
