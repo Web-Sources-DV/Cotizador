@@ -7,17 +7,65 @@ let businessSendInProgress = false;
 function initWhatsAppBusiness() {
     const button = document.getElementById('businessWhatsAppBtn');
     const endpoint = window.WHATSAPP_BUSINESS_CONFIG?.endpoint;
-    button.disabled = !endpoint;
+    button.disabled = false;
     document.getElementById('businessWhatsAppStatus').textContent = endpoint
-        ? 'El envío automático usa el número de WhatsApp Business de la empresa. Meta debe autorizar al destinatario o la conversación.'
-        : 'El envío de PDF y mensaje por WhatsApp aún no está activado. Solicite al administrador que habilite el servicio.';
+        ? 'WhatsApp Web descarga el PDF y abre el chat para adjuntarlo. Business usa el envío automático desde el número de la empresa.'
+        : 'Ambos botones descargan el PDF y preparan el mensaje para el número del cliente. Adjunte el archivo y confirme el envío en WhatsApp. Business abre la aplicación que el dispositivo tenga asociada a WhatsApp; si tiene ambas apps, elija Business.';
+    document.getElementById('webWhatsAppBtn').addEventListener('click', () => openWhatsAppWithPdf('web'));
     button.addEventListener('click', sendBusinessQuote);
 }
 
+let localWhatsAppInProgress = false;
+async function openWhatsAppWithPdf(mode) {
+    if (localWhatsAppInProgress || businessSendInProgress) return;
+    if (!lastQuoteData) { alert('Genere una cotización primero.'); return; }
+    const snapshot = structuredClone(lastQuoteData);
+    const phone = normalizeWhatsAppPhone(snapshot.phone);
+    if (!phone) { alert('Revise el teléfono del cliente en la cotización.'); return; }
+    const message = encodeURIComponent(whatsappBudgetMessage(snapshot));
+    const url = mode === 'web'
+        ? `https://web.whatsapp.com/send?phone=${phone}&text=${message}`
+        : `https://wa.me/${phone}?text=${message}`;
+    // Reserve the tab during the click, before generating the PDF asynchronously.
+    const chat = window.open('about:blank', '_blank');
+    if (chat) {
+        chat.opener = null;
+        chat.document.title = 'Preparando cotización';
+        chat.document.body.textContent = 'Preparando PDF y mensaje para WhatsApp…';
+    }
+    const status = document.getElementById('businessWhatsAppStatus');
+    localWhatsAppInProgress = true;
+    const buttons = ['webWhatsAppBtn', 'businessWhatsAppBtn'].map(id => document.getElementById(id));
+    buttons.forEach(button => button.disabled = true);
+    try {
+        status.textContent = 'Preparando PDF y mensaje…';
+        const file = await buildPdfFile(snapshot);
+        downloadPdfFile(file);
+        const explanation = `Se preparó la descarga del PDF para +${phone}. Adjunte ese archivo en el chat y pulse Enviar. `;
+        if (chat && !chat.closed) {
+            chat.location.replace(url);
+            status.textContent = explanation;
+        } else {
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = `Abrir chat del cliente +${phone}`;
+            status.replaceChildren(document.createTextNode(explanation + 'El navegador bloqueó o cerró la ventana. '), link);
+        }
+    } catch (error) {
+        if (chat && !chat.closed) chat.close();
+        status.textContent = `No se pudo preparar el PDF: ${error.message}. No se abrió el chat del cliente.`;
+    } finally {
+        localWhatsAppInProgress = false;
+        buttons.forEach(button => button.disabled = false);
+    }
+}
+
 async function sendBusinessQuote() {
-    if (businessSendInProgress || !lastQuoteData) return;
+    if (businessSendInProgress || localWhatsAppInProgress || !lastQuoteData) return;
     const endpoint = window.WHATSAPP_BUSINESS_CONFIG?.endpoint;
-    if (!endpoint) { alert('Falta activar WhatsApp Business Cloud API y el servidor de envío.'); return; }
+    if (!endpoint) return openWhatsAppWithPdf('business');
     let url;
     try { url = new URL(endpoint); if (url.protocol !== 'https:' || url.pathname !== '/send-quote') throw new Error(); }
     catch { alert('La dirección del servidor WhatsApp Business no es válida.'); return; }
