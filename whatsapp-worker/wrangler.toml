@@ -1,0 +1,9 @@
+name = "cotizador-whatsapp"
+main = "worker.mjs"
+compatibility_date = "2026-10-20"
+
+[vars]
+ALLOWED_ORIGIN = "https://web-sources-dv.github.io"
+# Complete with the Phone Number ID from Meta, NOT the displayed telephone number.
+META_PHONE_NUMBER_ID = ""
+# Set META_ACCESS_TOKEN and API_SHARED_KEY with wrangler secret put, never here.

@@ -255,10 +255,12 @@ function generatePdfHTML(data) {
     } else {
         services.forEach(s => {
             const price = s.price || 0;
+                    const quantity = s.quantity || 1;
+                    const unitPrice = s.unitPrice ?? price;
             servicesRows += `<tr>
                 <td style="padding:5px 7px; border:1px solid #ddd; font-size:10px;">${escapeHtml(s.name)}</td>
-                <td style="padding:5px 7px; text-align:center; border:1px solid #ddd; font-size:10px;">1</td>
-                <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${price.toFixed(2)}</td>
+                <td style="padding:5px 7px; text-align:center; border:1px solid #ddd; font-size:10px;">${quantity}</td>
+                <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${unitPrice.toFixed(2)}</td>
                 <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${price.toFixed(2)}</td>
             </tr>`;
         });
@@ -536,23 +538,42 @@ function showApp() {
 // ================================================================
 //  CÁLCULO Y GENERACIÓN
 // ================================================================
+function quotePricingFromForm() {
+    const people = Number(document.getElementById('peopleCount').value);
+    if (!Number.isInteger(people) || people < 1 || people > 20) return null;
+    const services = [];
+    let subtotalCents = 0, discountCents = 0;
+    document.querySelectorAll('.extra-service-check').forEach((cb, idx) => {
+        if (!cb.checked) return;
+        const cents = Math.round(getPriceFromInput(document.getElementById(`price_${idx}`)) * 100);
+        if (cb.value === 'Descuento') discountCents = Math.abs(cents);
+        else {
+            const lineCents = Math.max(0, cents) * people;
+            services.push({ name: cb.value, unitPrice: Math.max(0, cents) / 100, quantity: people, price: lineCents / 100 });
+            subtotalCents += lineCents;
+        }
+    });
+    return { people, services, subtotal: subtotalCents / 100, discount: discountCents / 100, total: (subtotalCents - discountCents) / 100 };
+}
+
+function updateQuotePricing() {
+    const target = document.getElementById('quotePricingPreview');
+    if (!target) return;
+    const data = quotePricingFromForm();
+    target.textContent = data
+        ? `${data.people} persona(s) · Subtotal: $${data.subtotal.toFixed(2)} · Descuento total: $${data.discount.toFixed(2)} · Total: $${data.total.toFixed(2)} USD`
+        : 'Ingrese una cantidad entera de personas entre 1 y 20.';
+}
+
 function calculateQuote() {
     const procedureText = document.getElementById('procedureSearch').value.trim();
     if (!procedureText) { alert('Seleccione un trámite.'); return null; }
-    const people = parseInt(document.getElementById('peopleCount').value) || 1;
-    const services = [];
-    let subtotal = 0, discount = 0;
-    document.querySelectorAll('.extra-service-check').forEach((cb, idx) => {
-        if (cb.checked) {
-            const price = getPriceFromInput(document.getElementById(`price_${idx}`));
-            if (cb.value === 'Descuento') { discount = Math.abs(price); }
-            else { services.push({ name: cb.value, price }); subtotal += price; }
-        }
-    });
+    const pricing = quotePricingFromForm();
+    if (!pricing) { alert('Ingrese una cantidad entera de personas entre 1 y 20.'); return null; }
     const reqs = Array.from(document.querySelectorAll('.requirement-check:checked')).map(cb => cb.value);
     return {
-        procedure: procedureText, people, services, subtotal, discount,
-        total: subtotal - discount,
+        procedure: procedureText, ...pricing,
+        total: pricing.total,
         requirements: reqs,
         observations: document.getElementById('observations').value.trim(),
         executive: currentUser, status: 'pendiente'
@@ -577,7 +598,7 @@ function showSummary() {
         <p><strong>Servicios:</strong></p><ul style="margin-left:1.5rem;">
     `;
     if (data.services.length === 0) html += '<li>Ninguno</li>';
-    else data.services.forEach(s => { html += `<li>${escapeHtml(s.name)}: $${s.price.toFixed(2)}</li>`; });
+    else data.services.forEach(s => { html += `<li>${escapeHtml(s.name)}: ${s.quantity || 1} × $${(s.unitPrice ?? s.price).toFixed(2)} = $${s.price.toFixed(2)}</li>`; });
     if (data.discount > 0) html += `<li>Descuento: -$${data.discount.toFixed(2)}</li>`;
     html += `</ul>
         <p><strong style="color:var(--gold); font-size:1.1rem;">TOTAL: $${totalFinal.toFixed(2)} USD</strong></p>
@@ -656,7 +677,9 @@ function resetForm() {
     document.querySelectorAll('.extra-service-check').forEach(cb => cb.checked = false);
     document.querySelectorAll('.requirement-check').forEach(cb => cb.checked = false);
     document.querySelectorAll('.service-price-input').forEach(inp => { inp.value = ''; inp.setAttribute('data-raw', ''); });
-    document.getElementById('clientName').value = '';
+    document.getElementById('peopleCount').value = '1';
+            updateQuotePricing();
+            document.getElementById('clientName').value = '';
     document.getElementById('clientId').value = '';
     document.getElementById('clientEmail').value = '';
     document.getElementById('clientPhone').value = '';
@@ -678,8 +701,8 @@ function hideLoader() {
     document.getElementById('loaderOverlay').classList.remove('active');
 }
 
-async function buildPdfFile() {
-    if (!lastQuoteData) throw new Error('No hay cotización');
+async function buildPdfFile(quoteData = lastQuoteData) {
+    if (!quoteData) throw new Error('No hay cotización');
     showLoader('Generando PDF…');
     // Render in a separate document: page scrolling, modals and responsive
     // application styles must never shift or crop the PDF capture.
@@ -694,7 +717,7 @@ async function buildPdfFile() {
     pdfDocument.close();
     const element = pdfDocument.createElement('div');
     element.className = 'pdf-export';
-    element.innerHTML = generatePdfHTML(lastQuoteData);
+    element.innerHTML = generatePdfHTML(quoteData);
     const style = pdfDocument.createElement('style');
     style.textContent = `
         html, body { margin:0; padding:0; display:block; background:white; }
@@ -725,7 +748,7 @@ async function buildPdfFile() {
             await logo.decode().catch(() => {});
         }
         await pdfDocument.fonts.ready;
-        const client = (lastQuoteData.client || 'SQP').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
+        const client = (quoteData.client || 'SQP').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
         const filename = `Presupuesto_${client}.pdf`;
         const options = {
             margin: [0.35, 0.35, 0.35, 0.35], filename,
@@ -784,12 +807,8 @@ function sendWhatsApp() {
         alert('Ingrese un teléfono válido en la cotización: 8 dígitos para Panamá o el número completo con código de país (ej. +507 6000-0000). Después confirme nuevamente la cotización.');
         return;
     }
-    const client = lastQuoteData.client || 'Cliente';
-    const total = (lastQuoteData.total || 0).toFixed(2);
-    const procedure = lastQuoteData.procedure;
-    const signature = getUsers()[currentUser]?.signature || 'Saludos cordiales,\nSQP LEGAL CONSULTING.';
-    const msg = `Hola ${client}, te comparto el presupuesto para "${procedure}" con un total de $${total} USD.\n\n${signature}`;
-    // Universal link keeps the recipient on mobile, desktop app and WhatsApp Web.
+    const msg = whatsappBudgetMessage(lastQuoteData);
+            // Universal link keeps the recipient on mobile, desktop app and WhatsApp Web.
     // Open immediately in the click handler, before dialogs or asynchronous work.
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     const chat = window.open(url, '_blank');
@@ -1135,6 +1154,7 @@ function loadTemplate(idx) {
     });
     if (template.procedure) document.getElementById('procedureSearch').value = template.procedure;
     closeTemplatesModal();
+    updateQuotePricing();
 }
 
 // ================================================================
@@ -1352,5 +1372,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     buildServicesList();
+            document.getElementById('formSection').addEventListener('input', updateQuotePricing);
+            document.getElementById('formSection').addEventListener('change', updateQuotePricing);
+            updateQuotePricing();
     buildRequirementsList();
+            initWhatsAppBusiness();
 });
