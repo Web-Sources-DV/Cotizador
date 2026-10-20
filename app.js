@@ -800,23 +800,6 @@ function normalizeWhatsAppPhone(value) {
     return parsed?.isPossible() ? parsed.number.slice(1) : null;
 }
 
-function sendWhatsApp() {
-    if (!lastQuoteData) { alert('Genere una cotización primero.'); return; }
-    const phone = normalizeWhatsAppPhone(lastQuoteData.phone);
-    if (!phone) {
-        alert('Ingrese un teléfono válido en la cotización: 8 dígitos para Panamá o el número completo con código de país (ej. +507 6000-0000). Después confirme nuevamente la cotización.');
-        return;
-    }
-    const msg = whatsappBudgetMessage(lastQuoteData);
-            // Universal link keeps the recipient on mobile, desktop app and WhatsApp Web.
-    // Open immediately in the click handler, before dialogs or asynchronous work.
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-    const chat = window.open(url, '_blank');
-    if (chat) chat.opener = null;
-    else window.location.assign(url);
-    // Opening a chat does not prove a message was sent; keep its status unchanged.
-}
-
         // ================================================================
 //  VISTA PREVIA
 // ================================================================
@@ -1311,7 +1294,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('newQuote').addEventListener('click', resetForm);
 
-    document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
     document.getElementById('previewPdfBtn').addEventListener('click', openPreview);
     document.getElementById('downloadPdfBtn').addEventListener('click', () => generateAndDownloadPDF(true));
     document.getElementById('closePreviewBtn').addEventListener('click', closePreview);

@@ -9,7 +9,7 @@
     <script src="vendor/libphonenumber-max-1.13.15.js"></script>
     <script src="phone-country.js?v=1"></script>
     <script src="whatsapp-business-config.js?v=1"></script>
-    <script src="whatsapp-business.js?v=1"></script>
+    <script src="whatsapp-business.js?v=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -645,12 +645,10 @@
 
             <div class="quote-result" id="quoteResult">
                 <div id="printableQuote"></div>
-                <p style="font-size:0.85rem; margin:1rem;">Abrir chat prepara solo el texto. Para adjuntar el PDF manualmente, descárguelo y agréguelo en ese chat. El envío automático del PDF requiere activar WhatsApp Business Cloud API.</p>
 
                 <p id="businessWhatsAppStatus" role="status" aria-live="polite" style="margin:1rem;"></p>
                 <div class="quote-actions">
-                    <button class="action-btn btn-whatsapp" id="whatsappBtn" title="Abre el chat del teléfono guardado en esta cotización">💬 Abrir chat (solo mensaje)</button>
-                    <button class="action-btn btn-whatsapp" id="businessWhatsAppBtn" disabled>📎 Enviar PDF + mensaje (Business)</button>
+                    <button class="action-btn btn-whatsapp" id="businessWhatsAppBtn" aria-describedby="businessWhatsAppStatus" disabled>📎 Enviar por WhatsApp: PDF + mensaje</button>
                     <button class="action-btn btn-preview" id="previewPdfBtn">👁️ Vista previa</button>
                     <button class="action-btn btn-download" id="downloadPdfBtn">📥 Descargar PDF</button>
                 </div>
@@ -1637,23 +1635,6 @@ async function handleLogin() {
     return parsed?.isPossible() ? parsed.number.slice(1) : null;
 }
 
-        function sendWhatsApp() {
-            if (!lastQuoteData) { alert('Genere una cotización primero.'); return; }
-            const phone = normalizeWhatsAppPhone(lastQuoteData.phone);
-            if (!phone) {
-                alert('Ingrese un teléfono válido en la cotización: 8 dígitos para Panamá o el número completo con código de país (ej. +507 6000-0000). Después confirme nuevamente la cotización.');
-                return;
-            }
-            const msg = whatsappBudgetMessage(lastQuoteData);
-            // Universal link keeps the recipient on mobile, desktop app and WhatsApp Web.
-            // Open immediately in the click handler, before dialogs or asynchronous work.
-            const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-            const chat = window.open(url, '_blank');
-            if (chat) chat.opener = null;
-            else window.location.assign(url);
-            // Opening a chat does not prove a message was sent; keep its status unchanged.
-        }
-
         // ================================================================
         //  VISTA PREVIA
         // ================================================================
@@ -2164,7 +2145,6 @@ async function handleLogin() {
             document.getElementById('newQuote').addEventListener('click', resetForm);
 
             // Acciones resultado
-            document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
             document.getElementById('previewPdfBtn').addEventListener('click', openPreview);
             document.getElementById('downloadPdfBtn').addEventListener('click', () => generateAndDownloadPDF(true));
             document.getElementById('closePreviewBtn').addEventListener('click', closePreview);

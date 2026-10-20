@@ -10,7 +10,7 @@ function initWhatsAppBusiness() {
     button.disabled = !endpoint;
     document.getElementById('businessWhatsAppStatus').textContent = endpoint
         ? 'El envío automático usa el número de WhatsApp Business de la empresa. Meta debe autorizar al destinatario o la conversación.'
-        : 'PDF + mensaje automático pendiente: falta activar Cloud API de Meta y el servidor. Abrir chat solo prepara el texto; no adjunta el PDF.';
+        : 'El envío de PDF y mensaje por WhatsApp aún no está activado. Solicite al administrador que habilite el servicio.';
     button.addEventListener('click', sendBusinessQuote);
 }
 
