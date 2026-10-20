@@ -28,7 +28,7 @@ npx wrangler deploy
 
 `API_SHARED_KEY` debe ser una clave aleatoria larga distinta del token de Meta. Solo los ejecutivos autorizados deben conocerla; el navegador la pide al enviar y no la conserva. Quien posea esa clave puede usar el número de empresa para enviar documentos: debe revocarse y sustituirse si se divulga. No escribir valores secretos en archivos, capturas, argumentos de comandos o chat. La validación de usuarios actual de la página es local y no constituye autenticación de servidor; por eso el Worker exige una clave adicional y valida el origen.
 
-Después del despliegue, establecer únicamente la URL pública `https://<worker>/send-quote` en `whatsapp-business-config.js`. Este archivo no debe contener tokens ni claves. Publicar la configuración de GitHub Pages. El botón de envío automático permanece deshabilitado mientras `endpoint` esté vacío.
+Después del despliegue, establecer únicamente la URL pública `https://<worker>/send-quote` en `whatsapp-business-config.js`. Este archivo no debe contener tokens ni claves. Publicar la configuración de GitHub Pages. Mientras `endpoint` esté vacío, el botón Business descarga el PDF y abre el enlace de WhatsApp asociado por el dispositivo; el ejecutivo debe adjuntarlo y confirmar el envío. Al configurar el endpoint, Business utiliza Cloud API para el envío automático. El botón WhatsApp Web conserva la descarga del PDF y la apertura del chat web para adjuntarlo manualmente. Un enlace del navegador no puede forzar la aplicación Business si el dispositivo tiene otra aplicación asociada.
 
 ## Restricciones reales de Meta
 
