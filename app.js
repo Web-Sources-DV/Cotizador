@@ -35,13 +35,37 @@ function getQuotes() {
 }
 function saveQuotes(q) { localStorage.setItem(QUOTES_KEY, JSON.stringify(q)); }
 function getCounter() {
-    try { return parseInt(localStorage.getItem(COUNTER_KEY) || '0'); } catch { return 0; }
+    let highest = 0;
+    try {
+        const saved = Number(localStorage.getItem(COUNTER_KEY));
+        if (Number.isSafeInteger(saved) && saved >= 0) highest = saved;
+    } catch { /* Recover from the saved quote history below. */ }
+    for (const quote of getQuotes()) {
+        const match = /^COT-\d{4}-(\d+)(?:-|$)/.exec(quote.quote_number || '');
+        const value = match ? Number(match[1]) : 0;
+        if (Number.isSafeInteger(value) && value > highest) highest = value;
+    }
+    return highest;
 }
+
 function incrementCounter() {
     const n = getCounter() + 1;
+    if (!Number.isSafeInteger(n)) throw new Error('El contador excede el límite permitido.');
     localStorage.setItem(COUNTER_KEY, String(n));
     return n;
 }
+
+function createQuoteNumber(counter, quotes) {
+    const year = new Intl.DateTimeFormat('en', { timeZone: 'America/Panama', year: 'numeric' }).format(new Date());
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const bytes = crypto.getRandomValues(new Uint8Array(16));
+        const unique = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('').toUpperCase();
+        const number = `COT-${year}-${String(counter).padStart(4, '0')}-${unique}`;
+        if (!quotes.some(quote => quote.quote_number === number)) return number;
+    }
+    throw new Error('No se pudo generar un número de cotización único. Intente de nuevo.');
+}
+
 function getTemplates() {
     try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); } catch { return []; }
 }
@@ -247,6 +271,10 @@ function generatePdfHTML(data) {
     const userObs = data.observations || '';
     const executive = data.executive || 'No asignado';
     const quoteNumber = data.quote_number || data.quoteNumber || 'N/A';
+            const uniqueRef = /^(COT-\d{4}-\d+-)([0-9A-F]{16})([0-9A-F]{16})$/.exec(quoteNumber);
+            const quoteNumberHtml = uniqueRef
+                ? `${escapeHtml(uniqueRef[1])}<br>${uniqueRef[2]}<br>${uniqueRef[3]}`
+                : escapeHtml(quoteNumber);
     const date = new Date().toLocaleDateString('es-CR');
 
     let servicesRows = '';
@@ -305,7 +333,7 @@ function generatePdfHTML(data) {
                     </td>
                     <td style="width: 40%; vertical-align: middle; text-align: right; padding-bottom: 6px;">
                         <div style="color: #B7A658; font-size: 18px; font-weight: bold; line-height: 1.2;">COTIZACIÓN</div>
-                        <div style="font-size: 10px; color: #555555; line-height: 1.2;">Nº: <strong>${escapeHtml(quoteNumber)}</strong></div>
+                        <div style="font-size: 10px; color: #555555; line-height: 1.2;">Nº: <strong>${quoteNumberHtml}</strong></div>
                     </td>
                 </tr>
             </table>
@@ -607,51 +635,52 @@ function showSummary() {
     document.getElementById('summaryModal').classList.add('active');
 }
 
-function confirmGenerate() {
-    if (!pendingGenerate) return;
-    const data = pendingGenerate;
+let quoteSaveInProgress = false;
+async function confirmGenerate() {
+    if (!pendingGenerate || quoteSaveInProgress) return;
+    const data = structuredClone(pendingGenerate);
+    const previousNumber = lastQuoteData?.quote_number;
     const clientName = document.getElementById('clientName').value.trim();
     const clientId = document.getElementById('clientId').value.trim();
     const email = document.getElementById('clientEmail').value.trim();
-    const phone = clientPhoneValue() || '';
-
-    if (lastQuoteData && lastQuoteData.quote_number) {
-        const quotes = getQuotes();
-        const idx = quotes.findIndex(q => q.quote_number === lastQuoteData.quote_number);
-        if (idx !== -1) {
-            quotes[idx] = {
-                ...quotes[idx], ...data,
-                client: clientName, client_id: clientId, email, phone,
-                total: data.subtotal - data.discount
-            };
+    const phone = clientPhoneValue();
+    if (phone === null) { alert('Revise el teléfono del cliente.'); return; }
+    const button = document.getElementById('confirmGenerateBtn');
+    quoteSaveInProgress = true;
+    button.disabled = true;
+    try {
+        const save = () => {
+            const quotes = getQuotes();
+            const idx = previousNumber ? quotes.findIndex(quote => quote.quote_number === previousNumber) : -1;
+            if (previousNumber && idx === -1) throw new Error('La cotización original ya no está en el historial. Recargue antes de continuar.');
+            const details = { ...data, client: clientName, client_id: clientId, email, phone, total: data.subtotal - data.discount };
+            let quote;
+            if (idx !== -1) {
+                quote = { ...quotes[idx], ...details };
+                quotes[idx] = quote;
+            } else {
+                const counter = incrementCounter();
+                quote = { ...details, quote_number: createQuoteNumber(counter, quotes), date: new Date().toISOString(), reminder_sent: false };
+                quotes.push(quote);
+            }
             saveQuotes(quotes);
-            lastQuoteData = quotes[idx];
-            displayQuote(lastQuoteData);
-            document.getElementById('summaryModal').classList.remove('active');
-            pendingGenerate = null;
-            return;
-        }
+            return quote;
+        };
+        // Serialize generators in tabs of this origin. Secure random IDs also
+        // prevent reuse across separate browsers, devices and cleared storage.
+        const quote = navigator.locks?.request
+            ? await navigator.locks.request('sqp-save-quote', save)
+            : save();
+        lastQuoteData = quote;
+        pendingGenerate = null;
+        displayQuote(quote);
+        document.getElementById('summaryModal').classList.remove('active');
+    } catch (error) {
+        alert(`No se guardó la cotización: ${error.message}`);
+    } finally {
+        quoteSaveInProgress = false;
+        button.disabled = false;
     }
-
-    const counter = incrementCounter();
-    const year = new Date().getFullYear();
-    const quoteNumber = `COT-${year}-${String(counter).padStart(4, '0')}`;
-
-    const quoteData = {
-        ...data,
-        client: clientName, client_id: clientId, email, phone,
-        quote_number: quoteNumber,
-        total: data.subtotal - data.discount,
-        date: new Date().toISOString(),
-        reminder_sent: false
-    };
-    const quotes = getQuotes();
-    quotes.push(quoteData);
-    saveQuotes(quotes);
-    lastQuoteData = quoteData;
-    displayQuote(quoteData);
-    document.getElementById('summaryModal').classList.remove('active');
-    pendingGenerate = null;
 }
 
 function cancelGenerate() {
