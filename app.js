@@ -560,6 +560,7 @@ function calculateQuote() {
 }
 
 function showSummary() {
+            if (clientPhoneValue() === null) { alert('Revise el teléfono del cliente y su país antes de confirmar la cotización.'); return; }
     const clientName = document.getElementById('clientName').value.trim();
     if (!clientName) { alert('Nombre del cliente obligatorio.'); return; }
     const data = calculateQuote();
@@ -591,7 +592,7 @@ function confirmGenerate() {
     const clientName = document.getElementById('clientName').value.trim();
     const clientId = document.getElementById('clientId').value.trim();
     const email = document.getElementById('clientEmail').value.trim();
-    const phone = document.getElementById('clientPhone').value.trim();
+    const phone = clientPhoneValue() || '';
 
     if (lastQuoteData && lastQuoteData.quote_number) {
         const quotes = getQuotes();
@@ -659,6 +660,7 @@ function resetForm() {
     document.getElementById('clientId').value = '';
     document.getElementById('clientEmail').value = '';
     document.getElementById('clientPhone').value = '';
+            resetClientPhoneCountry();
     document.getElementById('procedureSearch').value = '';
     document.getElementById('observations').value = '';
     lastQuoteData = null;
@@ -771,16 +773,8 @@ function getSignature() {
 }
 
 function normalizeWhatsAppPhone(value) {
-    const phone = String(value || '').trim();
-    if (!phone || !/^\+?[\d\s().-]+$/.test(phone)) return null;
-    const explicitInternational = phone.startsWith('+') || phone.startsWith('00');
-    let digits = phone.replace(/\D/g, '');
-    if (phone.startsWith('00')) digits = digits.slice(2);
-    // The client form defaults to Panama. Other countries need their country code.
-    if (!explicitInternational && digits.length === 8) digits = '507' + digits;
-    if (!/^[1-9]\d{9,14}$/.test(digits)) return null;
-    if (digits.startsWith('507') && digits.length !== 11) return null;
-    return digits;
+    const parsed = parsedClientPhone(value, 'PA');
+    return parsed?.isPossible() ? parsed.number.slice(1) : null;
 }
 
 function sendWhatsApp() {
@@ -1317,9 +1311,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('clientPhone').addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9+]/g, '');
-    });
+    initClientPhoneCountry();
 
     document.getElementById('suggestionForm').addEventListener('submit', function(e) {
         e.preventDefault();
