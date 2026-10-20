@@ -6,6 +6,8 @@
     <title>SQP LEGAL CONSULTING – Cotizador Jurídico</title>
 
     <link rel="icon" id="faviconLink" type="image/png">
+    <script src="vendor/libphonenumber-max-1.13.15.js"></script>
+    <script src="phone-country.js?v=1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -583,9 +585,11 @@
                     <input type="email" id="clientEmail" placeholder="correo@ejemplo.com" />
                 </div>
                 <div class="form-group">
-                    <label>Teléfono de contacto</label>
+                    <label for="clientPhoneCountry">País e indicativo</label>
+                    <select id="clientPhoneCountry" aria-describedby="clientPhoneHelp"></select>
+                    <label for="clientPhone">Teléfono de contacto</label>
                     <input type="tel" id="clientPhone" placeholder="+507 6000-0000" aria-describedby="clientPhoneHelp" />
-                    <small id="clientPhoneHelp">Panamá: 8 dígitos. Otros países: incluya + y código de país.</small>
+                    <small id="clientPhoneHelp">País inicial: Panamá (+507). Puede cambiarlo antes de escribir el número.</small>
                 </div>
 
                 <div class="form-group">
@@ -1387,6 +1391,7 @@ async function handleLogin() {
         }
 
         function showSummary() {
+            if (clientPhoneValue() === null) { alert('Revise el teléfono del cliente y su país antes de confirmar la cotización.'); return; }
             const clientName = document.getElementById('clientName').value.trim();
             if (!clientName) { alert('Nombre del cliente obligatorio.'); return; }
             const data = calculateQuote();
@@ -1419,7 +1424,7 @@ async function handleLogin() {
             const clientName = document.getElementById('clientName').value.trim();
             const clientId = document.getElementById('clientId').value.trim();
             const email = document.getElementById('clientEmail').value.trim();
-            const phone = document.getElementById('clientPhone').value.trim();
+            const phone = clientPhoneValue() || '';
 
             if (lastQuoteData && lastQuoteData.quote_number) {
                 const quotes = getQuotes();
@@ -1486,6 +1491,7 @@ async function handleLogin() {
             document.getElementById('clientId').value = '';
             document.getElementById('clientEmail').value = '';
             document.getElementById('clientPhone').value = '';
+            resetClientPhoneCountry();
             document.getElementById('procedureSearch').value = '';
             document.getElementById('observations').value = '';
             lastQuoteData = null;
@@ -1598,17 +1604,9 @@ async function handleLogin() {
         }
 
         function normalizeWhatsAppPhone(value) {
-            const phone = String(value || '').trim();
-            if (!phone || !/^\+?[\d\s().-]+$/.test(phone)) return null;
-            const explicitInternational = phone.startsWith('+') || phone.startsWith('00');
-            let digits = phone.replace(/\D/g, '');
-            if (phone.startsWith('00')) digits = digits.slice(2);
-            // The client form defaults to Panama. Other countries need their country code.
-            if (!explicitInternational && digits.length === 8) digits = '507' + digits;
-            if (!/^[1-9]\d{9,14}$/.test(digits)) return null;
-            if (digits.startsWith('507') && digits.length !== 11) return null;
-            return digits;
-        }
+    const parsed = parsedClientPhone(value, 'PA');
+    return parsed?.isPossible() ? parsed.number.slice(1) : null;
+}
 
         function sendWhatsApp() {
             if (!lastQuoteData) { alert('Genere una cotización primero.'); return; }
@@ -2163,9 +2161,7 @@ async function handleLogin() {
             });
 
             // Validar teléfono
-            document.getElementById('clientPhone').addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9+]/g, '');
-            });
+            initClientPhoneCountry();
 
             // Sugerencias
             document.getElementById('suggestionForm').addEventListener('submit', function(e) {
