@@ -45,3 +45,14 @@ test('customer language only applies to the identical original quote and can be 
  assert.match(fields.pdfLanguageStatus.textContent,/español original/);
  assert.equal(vm.runInContext("clientPdfLanguage({html:'original'})",context),'es');
 });
+
+test('catalog procedures stay Spanish source while free text keeps its selected origin',()=>{
+ for(const filename of ['index.html','app.js']) {
+  const source=fs.readFileSync(path.join(__dirname,'..',filename),'utf8');
+  const fn=source.slice(source.indexOf('function generatePdfHTML('),source.indexOf('//  LOGIN',source.indexOf('function generatePdfHTML(')));
+  const context=vm.createContext({document:{getElementById:()=>({options:[{value:'Permiso de trabajo.'}]})},escapeHtml:text=>String(text),FIXED_OBSERVATIONS_MESSAGE:'Condiciones fijas'});
+  vm.runInContext(fn,context);
+  assert.match(vm.runInContext("generatePdfHTML({procedure:'Permiso de trabajo.',observations:'Please bring your passport.'})",context),/data-translation-source="es"[^>]*>Permiso de trabajo\.</);
+  assert.match(vm.runInContext("generatePdfHTML({procedure:'Work permit application'})",context),/data-translation-source="custom"[^>]*>Work permit application</);
+ }
+});

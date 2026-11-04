@@ -263,6 +263,7 @@ function generatePdfHTML(data) {
     const clientPhone = data.phone || '-';
     const clientEmail = data.email || '-';
     const procedure = data.procedure || 'Trámite no especificado';
+            const procedureSource = !data.procedure || Array.from(document.getElementById('proceduresList')?.options || []).some(option => option.value === procedure) ? 'es' : 'custom';
     const services = data.services || [];
     const subtotal = data.subtotal || 0;
     const discount = data.discount || 0;
@@ -361,7 +362,7 @@ function generatePdfHTML(data) {
 
             <!-- ASUNTO -->
             <p style="font-weight: bold; font-size: 11px; margin: 0 0 6px 0; color: #0B759D;">
-                ASUNTO / TRÁMITE: <span data-translation-source="custom" style="color: #1e293b;">${escapeHtml(procedure)}</span>
+                ASUNTO / TRÁMITE: <span data-translation-source="${procedureSource}" style="color: #1e293b;">${escapeHtml(procedure)}</span>
             </p>
 
             <!-- TABLA DE SERVICIOS -->
