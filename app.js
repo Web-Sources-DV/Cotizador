@@ -148,7 +148,7 @@ function escapeHtml(text) {
 const defaultServices = [
     { name: 'Impuesto Al Estado' }, { name: 'Honorarios' }, { name: 'Gastos Administrativos' },
     { name: 'Notificación' }, { name: 'Tribunal' }, { name: 'Honorarios + Membresia' },
-    { name: 'Multa' }, { name: 'Descuento' }
+    { name: 'Multa' }, { name: 'Descuento' }, { name: 'Otros' }
 ];
 const requirementsList = [
     'Pasaporte vigente', 'Fotos tamaño carnet', 'Copia de cédula',
@@ -1137,8 +1137,8 @@ function saveCurrentTemplate() {
     const name = document.getElementById('templateName').value.trim();
     if (!name) { alert('Ingrese un nombre.'); return; }
     const services = [];
-    document.querySelectorAll('.extra-service-check:checked').forEach((cb, idx) => {
-        const price = getPriceFromInput(document.getElementById(`price_${idx}`));
+    document.querySelectorAll('.extra-service-check:checked').forEach(cb => {
+        const price = getPriceFromInput(cb.closest('.service-item').querySelector('.service-price-input'));
         services.push({ name: cb.value, price });
     });
     if (services.length === 0) { alert('Seleccione al menos un servicio.'); return; }
