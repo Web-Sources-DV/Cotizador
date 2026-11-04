@@ -56,6 +56,18 @@ Usar el servidor local en lugar de abrir `index.html` mediante doble clic. Así 
 6. Generar y confirmar el resumen. La aplicación guarda la cotización en el historial local y asigna su referencia.
 7. Consultar la vista previa, descargar el PDF o preparar su envío por WhatsApp. El contenido corto cabe en una página; el extenso continúa en las páginas necesarias.
 
+## Traducir el PDF del cliente
+
+Después de confirmar una cotización, pulsar **Traducir** en la parte inferior. Elegir el idioma de los textos escritos en **Trámite** y **Observaciones**, y el idioma del PDF final. Se ofrecen español, inglés, portugués, francés, alemán, italiano, neerlandés, polaco, rumano, ruso, sueco y turco. Los títulos y los textos del catálogo se traducen desde español; esto permite, por ejemplo, traducir observaciones en inglés a un PDF en español.
+
+**Traducir y generar PDF** traduce el documento completo y descarga el archivo. No cambia la interfaz del ejecutivo ni el registro original. Los campos de nombre del cliente y ejecutivo, marcas, nombres de bancos, identificaciones, correos, teléfonos, referencias, cuentas e importes conservan sus valores. Hay términos revisados para encabezados de presupuestos y comprobación de números para evitar alteraciones.
+
+La versión seleccionada también se utiliza en la vista previa, las siguientes descargas y los PDF preparados por los botones de WhatsApp. **Usar PDF español original** restaura el documento original. Editar, crear una cotización nueva o recargar la página descarta la selección de traducción; los documentos descargados se conservan en el dispositivo.
+
+Se utiliza la [Translator API del navegador](https://developer.chrome.com/docs/ai/translator-api) cuando es compatible; puede requerir descargar modelos de idiomas. Como alternativa, se usa la [API pública de MyMemory](https://mymemory.translated.net/doc/spec.php), que recibe los textos que deben traducirse y está sujeta a límites diarios y disponibilidad. Los campos de identidad/contacto marcados como protegidos no se envían, pero las observaciones sí: revisar su contenido antes de traducir en línea. Las traducciones se reutilizan en memoria durante la sesión para reducir solicitudes.
+
+Si falla un servicio, se alcanza un límite o la traducción altera una cifra, se muestra un error y no se descarga un documento parcialmente traducido. Revisar siempre la traducción del presupuesto antes de enviarlo al cliente, especialmente las condiciones jurídicas. No se requiere configurar Cloud API de WhatsApp para traducir el PDF.
+
 ## WhatsApp y envío del PDF
 
 | Botón | Funcionamiento sin Cloud API configurada |
@@ -94,6 +106,7 @@ Los teléfonos se interpretan y formatean con `libphonenumber-js`, alojado en el
 | --- | --- |
 | [index.html](index.html) | Punto de entrada que se ejecuta en GitHub Pages. Incluye los estilos y la lógica principal activa. |
 | [app.js](app.js) y [stilos.css](stilos.css) | Archivos separados de lógica y estilos conservados en el proyecto. El `index.html` actual no los carga directamente; no sustituyen su código embebido. |
+| [pdf-translation.js](pdf-translation.js) | Idiomas del documento, traducción local/en línea y selección del PDF del cliente. |
 | [phone-country.js](phone-country.js) | Selector de país, sugerencias de indicativo y normalización del teléfono. |
 | [whatsapp-business.js](whatsapp-business.js) | Preparación del PDF y mensaje para Web/aplicación, y cliente de la integración automática opcional. |
 | [whatsapp-business-config.js](whatsapp-business-config.js) | Dirección pública del servidor opcional. No debe contener secretos. |

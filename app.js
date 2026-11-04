@@ -308,7 +308,7 @@ function generatePdfHTML(data) {
 
     let observationsHtml = '';
     if (userObs.trim()) {
-        observationsHtml += `<p style="margin: 0 0 4px 0; font-size: 9px; color: #333; white-space: pre-wrap;">${escapeHtml(userObs)}</p>`;
+        observationsHtml += `<p data-translation-source="custom" style="margin: 0 0 4px 0; font-size: 9px; color: #333; white-space: pre-wrap;">${escapeHtml(userObs)}</p>`;
     }
     observationsHtml += `<p style="margin: 0; font-size: 9px; color: #555; font-style: italic; background: #f9fbfd; padding: 5px 7px; border-left: 3px solid #B7A658;">${FIXED_OBSERVATIONS_MESSAGE}</p>`;
 
@@ -325,7 +325,7 @@ function generatePdfHTML(data) {
                                     <img id="pdfLogoImgInner" style="height: 40px; width: auto; display: block;" alt="SQP" />
                                 </td>
                                 <td style="vertical-align: middle;">
-                                    <div style="color: #0B759D; font-size: 15px; font-weight: bold; line-height: 1.2;">SQP LEGAL CONSULTING</div>
+                                    <div style="color: #0B759D; font-size: 15px; font-weight: bold; line-height: 1.2;" translate="no">SQP LEGAL CONSULTING</div>
                                     <div style="font-size: 9px; color: #555555; line-height: 1.2;">Abogados &amp; Consultores Jurídicos</div>
                                 </td>
                             </tr>
@@ -333,7 +333,7 @@ function generatePdfHTML(data) {
                     </td>
                     <td style="width: 40%; vertical-align: middle; text-align: right; padding-bottom: 6px;">
                         <div style="color: #B7A658; font-size: 18px; font-weight: bold; line-height: 1.2;">COTIZACIÓN</div>
-                        <div style="font-size: 10px; color: #555555; line-height: 1.2;">Nº: <strong>${quoteNumberHtml}</strong></div>
+                        <div style="font-size: 10px; color: #555555; line-height: 1.2;">Nº: <strong translate="no">${quoteNumberHtml}</strong></div>
                     </td>
                 </tr>
             </table>
@@ -343,25 +343,25 @@ function generatePdfHTML(data) {
                 <tr>
                     <td style="width: 50%; vertical-align: top; border: 1px solid #dddddd; padding: 6px; background: #f9fbfd;">
                         <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 3px;">DATOS DE LA FIRMA JURÍDICA:</div>
-                        <strong>RUC / Céd. Jurídica:</strong> 3-101-892341-20<br>
-                        <strong>Teléfono:</strong> +506 2201-9000<br>
-                        <strong>Correo:</strong> cotizaciones@sqplegal.com<br>
-                        <strong>Fecha Emisión:</strong> ${date}<br>
-                        <strong>Ejecutivo:</strong> ${escapeHtml(executive)}
+                        <strong>RUC / Céd. Jurídica:</strong> <span translate="no">3-101-892341-20</span><br>
+                        <strong>Teléfono:</strong> <span translate="no">+506 2201-9000</span><br>
+                        <strong>Correo:</strong> <span translate="no">cotizaciones@sqplegal.com</span><br>
+                        <strong>Fecha Emisión:</strong> <span translate="no">${date}</span><br>
+                        <strong>Ejecutivo:</strong> <span translate="no">${escapeHtml(executive)}</span>
                     </td>
                     <td style="width: 50%; vertical-align: top; border: 1px solid #dddddd; padding: 6px; background: #f9fbfd;">
                         <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 3px;">DATOS DEL CLIENTE:</div>
-                        <strong>Cliente:</strong> ${escapeHtml(clientName)}<br>
-                        <strong>Identificación:</strong> ${escapeHtml(clientId)}<br>
-                        <strong>Teléfono:</strong> ${escapeHtml(clientPhone)}<br>
-                        <strong>Correo:</strong> ${escapeHtml(clientEmail)}
+                        <strong>Cliente:</strong> <span translate="no">${escapeHtml(clientName)}</span><br>
+                        <strong>Identificación:</strong> <span translate="no">${escapeHtml(clientId)}</span><br>
+                        <strong>Teléfono:</strong> <span translate="no">${escapeHtml(clientPhone)}</span><br>
+                        <strong>Correo:</strong> <span translate="no">${escapeHtml(clientEmail)}</span>
                     </td>
                 </tr>
             </table>
 
             <!-- ASUNTO -->
             <p style="font-weight: bold; font-size: 11px; margin: 0 0 6px 0; color: #0B759D;">
-                ASUNTO / TRÁMITE: <span style="color: #1e293b;">${escapeHtml(procedure)}</span>
+                ASUNTO / TRÁMITE: <span data-translation-source="custom" style="color: #1e293b;">${escapeHtml(procedure)}</span>
             </p>
 
             <!-- TABLA DE SERVICIOS -->
@@ -399,8 +399,8 @@ function generatePdfHTML(data) {
             <div style="margin-bottom: 8px;">
                 <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 2px;">MÉTODOS DE PAGO:</div>
                 <div style="font-size: 8px; line-height: 1.4; margin-top: 3px; background: #f9fbfd; padding: 6px 7px; border-left: 3px solid #0B759D;">
-                    <p style="margin: 1px 0;"><strong>Banco Nacional de Panamá</strong> — Cuenta de Ahorro — Titular: SQP Legal Consulting — Cuenta: 10000346515</p>
-                    <p style="margin: 1px 0;"><strong>Banco Aliado</strong> — Cuenta de Ahorro — Titular: SQP Legal Consulting — Cuenta: 8200012913</p>
+                    <p style="margin: 1px 0;"><strong translate="no">Banco Nacional de Panamá</strong> — Cuenta de Ahorro — Titular: <span translate="no">SQP Legal Consulting</span> — Cuenta: <span translate="no">10000346515</span></p>
+                    <p style="margin: 1px 0;"><strong translate="no">Banco Aliado</strong> — Cuenta de Ahorro — Titular: <span translate="no">SQP Legal Consulting</span> — Cuenta: <span translate="no">8200012913</span></p>
                     <p style="margin: 3px 0 0 0; font-size: 7px; color: #666666;"><em>Si tu banco solicita más dígitos, agrega dos (2) ceros al inicio del número de cuenta.</em></p>
                     <p style="margin: 3px 0 0 0; font-weight: 600;">Importante: Una vez realizado el pago, envía el comprobante para confirmar y agilizar el proceso.</p>
                     <p style="margin: 2px 0 0 0; font-style: italic; color: #B7A658;">¡Gracias por su confianza!</p>
@@ -411,7 +411,7 @@ function generatePdfHTML(data) {
             <div style="border-top: 1px solid #dddddd; margin-top: 10px; padding-top: 6px; text-align: center; font-size: 8px; color: #666666;">
                 Esta cotización será válida por 30 días calendario.
                 <br>
-                <span style="color: #B7A658;">SQP LEGAL CONSULTING</span> - Tel: +506 2201-9000 - cotizaciones@sqplegal.com
+                <span style="color: #B7A658;" translate="no">SQP LEGAL CONSULTING</span> - Tel: <span translate="no">+506 2201-9000</span> - <span translate="no">cotizaciones@sqplegal.com</span>
             </div>
         </div>
     `;
@@ -689,6 +689,7 @@ function cancelGenerate() {
 }
 
 function displayQuote(data) {
+            resetPdfTranslation();
     const html = generatePdfHTML(data);
     document.getElementById('printableQuote').innerHTML = html;
     getPdfLogoDataUri().then(uri => {
@@ -701,6 +702,7 @@ function displayQuote(data) {
 }
 
 function resetForm() {
+            resetPdfTranslation();
     document.getElementById('formSection').style.display = 'block';
     document.getElementById('quoteResult').classList.remove('active');
     document.querySelectorAll('.extra-service-check').forEach(cb => cb.checked = false);
@@ -730,7 +732,7 @@ function hideLoader() {
     document.getElementById('loaderOverlay').classList.remove('active');
 }
 
-async function buildPdfFile(quoteData = lastQuoteData) {
+async function buildPdfFile(quoteData = lastQuoteData, translation = null) {
     if (!quoteData) throw new Error('No hay cotización');
     showLoader('Generando PDF…');
     // Render in a separate document: page scrolling, modals and responsive
@@ -746,7 +748,7 @@ async function buildPdfFile(quoteData = lastQuoteData) {
     pdfDocument.close();
     const element = pdfDocument.createElement('div');
     element.className = 'pdf-export';
-    element.innerHTML = generatePdfHTML(quoteData);
+    element.innerHTML = translation?.html || clientPdfHTML(quoteData);
     const style = pdfDocument.createElement('style');
     style.textContent = `
         html, body { margin:0; padding:0; display:block; background:white; }
@@ -778,7 +780,8 @@ async function buildPdfFile(quoteData = lastQuoteData) {
         }
         await pdfDocument.fonts.ready;
         const client = (quoteData.client || 'SQP').replace(/[^a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ\s]/g, '').trim().replace(/\s+/g, '_');
-        const filename = `Presupuesto_${client}.pdf`;
+        const language = translation?.language || clientPdfLanguage(quoteData);
+        const filename = `Presupuesto_${client}${language === 'es' ? '' : '_' + language}.pdf`;
         const options = {
             margin: [0.35, 0.35, 0.35, 0.35], filename,
             image: { type:'jpeg', quality:0.98 },
@@ -1388,4 +1391,5 @@ document.addEventListener('DOMContentLoaded', function() {
             updateQuotePricing();
     buildRequirementsList();
             initWhatsAppBusiness();
+            initPdfTranslation();
 });
