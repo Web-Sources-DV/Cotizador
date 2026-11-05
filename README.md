@@ -1,34 +1,85 @@
 # Cotizador Jurídico — SQP Legal Consulting
 
-Aplicación web en español para preparar cotizaciones de trámites jurídicos y migratorios, calcular importes por persona, generar presupuestos en PDF con la identidad de SQP Legal Consulting y llevar un historial local.
+Herramienta web para preparar presupuestos de trámites jurídicos y migratorios. Reúne los datos del cliente, los servicios, los requisitos y las condiciones del trámite en una cotización que se puede revisar, descargar en PDF y preparar para enviar por WhatsApp.
 
-**Abrir la aplicación:** [web-sources-dv.github.io/Cotizador](https://web-sources-dv.github.io/Cotizador/)
+El trabajo del ejecutivo se realiza en español. El documento del cliente puede generarse en otro idioma sin cambiar el formulario ni modificar el registro original.
 
-## ¿Qué permite hacer?
+**Aplicación publicada:** [web-sources-dv.github.io/Cotizador](https://web-sources-dv.github.io/Cotizador/)
 
-- Registrar nombre, identificación, correo y teléfono del cliente.
-- Sugerir el país y el indicativo telefónico, con un selector para números locales.
-- Elegir el trámite, los servicios, sus precios y los documentos requeridos.
-- Multiplicar el precio de cada servicio por la cantidad de personas, de 1 a 20, y mostrar el total al instante.
-- Aplicar un descuento global una sola vez. No se añade IVA adicional al precio ingresado.
-- Revisar un resumen antes de confirmar y crear el PDF con cantidades, precios unitarios, subtotales, condiciones y métodos de pago.
-- Generar una referencia con consecutivo local e identificador aleatorio seguro para evitar duplicados entre navegadores. Editar conserva el número de la cotización.
-- Consultar historial, estados, plantillas y seguimiento de cotizaciones, según el usuario.
-- Ver, desde el usuario Lic. Daryl Villa, barras de participación diaria por ejecutivo calculadas sobre las cotizaciones de ese navegador. No miden tiempo de conexión ni reúnen otros dispositivos.
-- Preparar el PDF y el mensaje del presupuesto para WhatsApp Web o la aplicación WhatsApp Business.
+## Alcance del proyecto
 
-## Instalación y ejecución local
+El proyecto está centrado en la elaboración de cotizaciones: desde la captura de datos hasta la preparación del documento que recibe el cliente. La aplicación principal funciona en el navegador y se publica como un sitio estático en GitHub Pages.
 
-La aplicación principal es estática: **no necesita `npm install`, compilación, FastAPI, Next.js ni una base de datos de servidor**.
+El historial y la configuración de usuarios son locales a cada navegador. Esta decisión simplifica la instalación, pero también define su alcance: no hay una base de datos compartida, sincronización entre dispositivos ni un sistema de autenticación de servidor. El envío automático mediante WhatsApp Business es un componente opcional que requiere infraestructura y credenciales propias.
+
+## Funciones
+
+### Preparación y cálculo
+
+- Registro de nombre, identificación, correo y teléfono del cliente.
+- Selector de país y sugerencia del indicativo telefónico. Panamá (`+507`) es el país inicial; los números internacionales se guardan con su indicativo.
+- Selección del trámite, servicios y documentación requerida.
+- Cantidad de personas entre 1 y 20, con precios unitarios y recálculo inmediato del presupuesto.
+- Servicio **Otros**, con precio por persona, para gastos o documentación que no figuren en las opciones habituales. El detalle puede escribirse en Observaciones.
+- Descuento global aplicado una sola vez. El sistema no añade IVA adicional al importe ingresado.
+- Resumen de confirmación antes de guardar la cotización.
+
+El cálculo parte de los servicios seleccionados:
+
+```text
+Subtotal = suma de los precios por persona × cantidad de personas
+Total    = subtotal − descuento global
+```
+
+Por ejemplo, Honorarios de $100, Gastos Administrativos de $50 y Otros de $25 suman $175 por persona. Para dos personas, el subtotal es $350. Si se aplica un descuento de $20, el total es $330.
+
+### Documentos e idiomas
+
+El PDF incluye la identidad de la firma, los datos del cliente, el trámite, las cantidades, los precios unitarios, los subtotales, los requisitos, las condiciones y los métodos de pago. La vista previa, la descarga y la preparación del archivo para WhatsApp utilizan la misma ruta de generación.
+
+La opción **Traducir** trabaja sobre el documento del cliente. Admite español, inglés, portugués, francés, alemán, italiano, neerlandés, polaco, rumano, ruso, sueco y turco. Los campos de identidad, las marcas, los nombres de bancos, las referencias, las cuentas y los importes conservan sus valores.
+
+### Registro y seguimiento
+
+Cada cotización nueva recibe una referencia formada por el año de Panamá, un consecutivo local y un identificador aleatorio seguro. El contador consulta el historial para recuperarse de un valor reiniciado o inválido. Editar una cotización conserva su número; el doble clic en Confirmar no crea dos registros.
+
+También se incluyen historial, estados de cotización, plantillas de servicios, seguimiento de pendientes, perfil y modo oscuro. Las opciones disponibles dependen del usuario. El panel de uso diario de Lic. Daryl Villa muestra la proporción de cotizaciones por ejecutivo dentro del historial de ese navegador; no mide horas de trabajo ni actividad de otros dispositivos.
+
+## Qué lo diferencia de un cotizador genérico
+
+La diferencia está en el flujo de trabajo que resuelve y en las reglas que aplica al documento:
+
+- **Está organizado alrededor del trámite.** Servicios, documentación requerida, observaciones y condiciones forman parte del mismo presupuesto. El precio no queda separado de lo que el cliente necesita presentar.
+- **Separa el idioma de trabajo del idioma de entrega.** El ejecutivo conserva la interfaz en español y el cliente recibe el PDF en el idioma elegido. La traducción también contempla los textos libres del trámite y las observaciones.
+- **Mantiene el cálculo visible.** La cantidad de personas afecta a cada servicio seleccionado. El resumen y el PDF muestran cantidad, precio unitario y subtotal, de modo que el total se puede comprobar.
+- **Conserva la referencia al editar.** La cotización mantiene su identidad durante una corrección. La numeración incorpora un componente aleatorio para distinguir documentos creados en navegadores diferentes.
+- **Puede ejecutarse como sitio estático.** La aplicación principal no necesita instalar un servidor de aplicación ni una base de datos. Esto facilita su despliegue, a cambio de mantener los datos separados por navegador.
+
+Estas son decisiones de este proyecto, no una comparación de rendimiento o cobertura con productos comerciales. Para una operación con expedientes compartidos, permisos centralizados o facturación integrada habría que incorporar esos componentes.
+
+## Mejoras incorporadas
+
+| Área | Cambio implementado |
+| --- | --- |
+| Importes | Cálculo en centavos, multiplicación por personas, descuento global y total visible mientras se edita. |
+| Servicios | Opción Otros con precio propio y lectura del precio desde la fila correcta al guardar plantillas. |
+| PDF | Renderizado en un documento separado para evitar que el desplazamiento o los estilos de la pantalla recorten el contenido; paginación según su extensión. |
+| Numeración | Recuperación del contador desde el historial, identificadores aleatorios y coordinación entre pestañas mediante Web Locks cuando el navegador lo permite. |
+| Teléfonos | Reconocimiento de indicativos, selector de país y uso del número internacional del cliente al preparar el chat. |
+| WhatsApp | Botones separados para Web y Business, descarga del PDF y enlace al destinatario si el navegador bloquea la ventana. |
+| Traducción | Idioma independiente para el PDF, términos revisados para encabezados y controles que detienen la generación si una traducción altera cifras. |
+| Validación | Pruebas automatizadas de cálculos, numeración, teléfonos, traducción y solicitudes simuladas a WhatsApp Business Cloud API. |
+
+## Instalación local
 
 ### Requisitos
 
-- Un navegador actualizado, como Chrome, Edge, Firefox o Safari.
-- Git para clonar el repositorio, o descargarlo desde **Code → Download ZIP** y descomprimirlo.
-- Python 3 para ejecutar el servidor local de este ejemplo.
-- Conexión a Internet para cargar la biblioteca de PDF desde cdnjs y abrir WhatsApp.
+- Navegador actualizado.
+- Git para clonar el repositorio, o el ZIP descargado desde **Code → Download ZIP**.
+- Python 3 para el servidor HTTP del ejemplo.
+- Conexión a Internet para la biblioteca PDF alojada en cdnjs, WhatsApp y la traducción en línea cuando se utilice.
 
-### Pasos
+La aplicación principal se sirve directamente desde sus archivos. No requiere instalar paquetes npm ni ejecutar una compilación.
 
 ```sh
 git clone https://github.com/Web-Sources-DV/Cotizador.git
@@ -36,107 +87,88 @@ cd Cotizador
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-En Windows, si el comando `python3` no existe:
+En Windows se puede usar el lanzador de Python:
 
 ```powershell
 py -m http.server 8000 --bind 127.0.0.1
 ```
 
-Abrir **http://127.0.0.1:8000** en el navegador. Mantener la terminal abierta mientras se utiliza la aplicación y pulsar `Ctrl+C` para detener el servidor.
+Abrir **http://127.0.0.1:8000**. La terminal debe permanecer abierta mientras se utiliza el servidor; `Ctrl+C` lo detiene. Se recomienda este acceso por HTTP local en lugar de abrir `index.html` mediante doble clic.
 
-Usar el servidor local en lugar de abrir `index.html` mediante doble clic. Así se cargan los recursos desde un mismo origen y las funciones del navegador trabajan en un contexto compatible.
+### Uso básico
 
-## Cómo crear una cotización
+1. Seleccionar el usuario e ingresar. En el primer acceso, los usuarios con contraseña la crean en ese navegador. Lic. Daryl Villa está configurado para entrar sin contraseña.
+2. Completar los datos del cliente y revisar el país y el teléfono.
+3. Elegir el trámite, indicar la cantidad de personas y marcar los servicios que se van a cobrar.
+4. Introducir los precios por persona, el descuento global y las observaciones necesarias.
+5. Revisar el resumen y confirmar. Se guarda el registro y se asigna su referencia.
+6. Consultar la vista previa, descargar el PDF o preparar el archivo y el mensaje para WhatsApp.
 
-1. Seleccionar un usuario e ingresar. En el primer acceso, los usuarios con contraseña crean la suya en ese navegador; Lic. Daryl Villa está configurado para entrar sin contraseña.
-2. Completar los datos del cliente. Escribir el teléfono con indicativo internacional o seleccionar el país para un número local. Panamá (`+507`) es la opción inicial.
-3. Elegir el trámite y la cantidad de personas.
-4. Marcar los servicios e ingresar el **precio por persona**. El descuento, si se selecciona, se aplica al total una sola vez.
-5. Revisar requisitos, observaciones y total. Por ejemplo: tres servicios de $100 para tres personas producen un subtotal de $900; con $25 de descuento, el total es $875.
-6. Generar y confirmar el resumen. La aplicación guarda la cotización en el historial local y asigna su referencia.
-7. Consultar la vista previa, descargar el PDF o preparar su envío por WhatsApp. El contenido corto cabe en una página; el extenso continúa en las páginas necesarias.
+## Traducción del PDF
 
-## Traducir el PDF del cliente
+Después de confirmar, pulsar **Traducir** en la parte inferior. Seleccionar el idioma de los textos libres y el idioma del documento final. Los títulos y las opciones del catálogo se traducen desde español, aunque las observaciones estén escritas en otro idioma.
 
-Después de confirmar una cotización, pulsar **Traducir** en la parte inferior. Elegir el idioma de los textos escritos en **Trámite** y **Observaciones**, y el idioma del PDF final. Se ofrecen español, inglés, portugués, francés, alemán, italiano, neerlandés, polaco, rumano, ruso, sueco y turco. Los títulos y los textos del catálogo se traducen desde español; esto permite, por ejemplo, traducir observaciones en inglés a un PDF en español.
+**Traducir y generar PDF** descarga el documento y selecciona esa versión para las siguientes vistas previas, descargas y archivos preparados para WhatsApp. **Usar PDF español original** restaura el documento de origen. Al confirmar cambios, iniciar una cotización nueva o recargar la página se descarta la selección de traducción; los archivos ya descargados permanecen en el dispositivo.
 
-**Traducir y generar PDF** traduce el documento completo y descarga el archivo. No cambia la interfaz del ejecutivo ni el registro original. Los campos de nombre del cliente y ejecutivo, marcas, nombres de bancos, identificaciones, correos, teléfonos, referencias, cuentas e importes conservan sus valores. Hay términos revisados para encabezados de presupuestos y comprobación de números para evitar alteraciones.
+El motor utiliza la [Translator API del navegador](https://developer.chrome.com/docs/ai/translator-api) cuando está disponible. Puede requerir una descarga inicial de modelos. La alternativa es la [API pública de MyMemory](https://mymemory.translated.net/doc/spec.php), sujeta a disponibilidad y límites diarios. En ese modo se envían al proveedor los textos que deben traducirse, incluidas las observaciones; los campos de identidad y contacto marcados como protegidos se excluyen.
 
-La versión seleccionada también se utiliza en la vista previa, las siguientes descargas y los PDF preparados por los botones de WhatsApp. **Usar PDF español original** restaura el documento original. Editar, crear una cotización nueva o recargar la página descarta la selección de traducción; los documentos descargados se conservan en el dispositivo.
+Las traducciones se reutilizan en memoria durante la sesión. Si el servicio falla, alcanza su límite o devuelve una traducción que cambia una cifra, se muestra un error y no se descarga un PDF parcialmente traducido. Los encabezados jurídicos más ambiguos cuentan con términos revisados, pero el documento debe revisarse antes de entregarlo al cliente, especialmente las condiciones del trámite.
 
-Se utiliza la [Translator API del navegador](https://developer.chrome.com/docs/ai/translator-api) cuando es compatible; puede requerir descargar modelos de idiomas. Como alternativa, se usa la [API pública de MyMemory](https://mymemory.translated.net/doc/spec.php), que recibe los textos que deben traducirse y está sujeta a límites diarios y disponibilidad. Los campos de identidad/contacto marcados como protegidos no se envían, pero las observaciones sí: revisar su contenido antes de traducir en línea. Las traducciones se reutilizan en memoria durante la sesión para reducir solicitudes.
+## WhatsApp: preparación del chat y envío automático
 
-Si falla un servicio, se alcanza un límite o la traducción altera una cifra, se muestra un error y no se descarga un documento parcialmente traducido. Revisar siempre la traducción del presupuesto antes de enviarlo al cliente, especialmente las condiciones jurídicas. No se requiere configurar Cloud API de WhatsApp para traducir el PDF.
+Con la configuración incluida en el repositorio, ambos botones preparan la descarga del PDF y el mensaje para el teléfono de la cotización:
 
-## WhatsApp y envío del PDF
-
-| Botón | Funcionamiento sin Cloud API configurada |
+| Opción | Destino |
 | --- | --- |
-| **WhatsApp Web** | Prepara la descarga del PDF y abre el chat web del teléfono del cliente con el mensaje del presupuesto. |
-| **WhatsApp Business** | Prepara la descarga del PDF y abre el enlace de WhatsApp asociado por el dispositivo. Si hay varias aplicaciones, se debe elegir Business. |
+| WhatsApp Web | Chat en `web.whatsapp.com` con el número del cliente y el mensaje del presupuesto. |
+| WhatsApp Business | Enlace de WhatsApp que abre la aplicación asociada por el dispositivo. Si hay varias instaladas, se debe elegir Business. |
 
-En estos modos, el ejecutivo debe **adjuntar el PDF descargado y confirmar el envío** en WhatsApp. Un enlace web no permite insertar automáticamente un archivo en el chat ni forzar la aplicación Business instalada. Abrir el chat no marca la cotización como enviada.
+El ejecutivo debe adjuntar el PDF descargado y confirmar el envío. Un enlace del navegador no permite insertar automáticamente el archivo en el chat ni forzar la aplicación Business instalada. Abrir el chat no marca la cotización como enviada.
 
-El repositorio incluye una integración opcional para enviar el documento y el mensaje automáticamente mediante **WhatsApp Business Cloud API de Meta**. Requiere un servidor, un número de empresa registrado y credenciales guardadas exclusivamente en ese servidor. Tener la aplicación WhatsApp Business instalada no activa esta API.
+La integración opcional con **WhatsApp Business Cloud API** sí prepara una solicitud de documento con el mensaje como texto adjunto, desde el número de empresa registrado en Meta. Requiere desplegar un servidor y configurar sus credenciales. El endpoint incluido está vacío: **el envío automático no está activado**.
 
-La configuración publicada mantiene el endpoint vacío: **el envío automático no está activado**. Para habilitarlo, seguir la [guía del servidor de WhatsApp Business](whatsapp-worker/README.md). Los mensajes libres con documentos están sujetos a la ventana de atención de 24 horas de Meta; fuera de ella se necesita una plantilla aprobada, no implementada actualmente. La aceptación de un mensaje por Meta no confirma entrega o lectura.
+La [guía de configuración del servidor](whatsapp-worker/README.md) explica los requisitos. Los documentos con texto libre están sujetos a la ventana de atención de 24 horas de Meta; fuera de ella se requiere una plantilla aprobada, que esta integración no implementa. La aceptación de un mensaje por Meta tampoco confirma su entrega o lectura.
 
-## Cómo está construido
+## Arquitectura y organización
 
-El programa se construye a partir de una página estática que reúne el formulario, los estilos, el catálogo de servicios, las reglas de cálculo y los componentes de consulta. JavaScript escucha los cambios del formulario, calcula los importes en centavos y guarda el resultado confirmado en el navegador.
+La entrada de la aplicación es `index.html`, que contiene el formulario, los estilos y la lógica principal activa. Los módulos separados resuelven teléfonos, traducción y preparación del envío. La generación del PDF construye una representación HTML del presupuesto en un documento aislado y la convierte a tamaño carta con html2pdf.js, que incluye html2canvas y jsPDF.
 
-Para fabricar el PDF, la aplicación construye una versión HTML del presupuesto con el logotipo de la firma y la renderiza en un documento separado. Esto evita que el desplazamiento de la pantalla o los estilos de la interfaz recorten el archivo. `html2pdf.js` utiliza internamente html2canvas y jsPDF para producir el documento en tamaño carta y gestionar los saltos de página.
-
-Los teléfonos se interpretan y formatean con `libphonenumber-js`, alojado en el repositorio. La numeración usa Web Crypto para el identificador aleatorio y Web Locks, cuando está disponible, para coordinar la creación entre pestañas del mismo origen. El contador también consulta el historial para recuperarse de un valor reiniciado o inválido.
-
-| Tecnología | Uso |
+| Archivo o carpeta | Responsabilidad |
 | --- | --- |
-| HTML5 y CSS | Formulario, diseño adaptable, modales, identidad visual y modo oscuro. |
-| JavaScript del navegador | Cálculos, usuarios locales, historial, plantillas, numeración y acciones de la interfaz. |
-| `localStorage` y `sessionStorage` | Datos persistentes del navegador y sesión local. |
-| html2pdf.js 0.10.1 | Generación de PDF; se carga desde cdnjs. |
-| libphonenumber-js 1.13.15 | Países, indicativos y formato telefónico; incluye su licencia y procedencia en `vendor/`. |
-| GitHub Pages | Publicación de la aplicación estática. |
-| Cloudflare Workers + Meta Cloud API | Servidor opcional para enviar PDF con mensaje; requiere configuración externa. |
-| Node.js y `node:test` | Pruebas de las reglas de negocio y de las integraciones simuladas. |
+| [index.html](index.html) | Interfaz, catálogo, cálculos, historial y generación del presupuesto. |
+| [phone-country.js](phone-country.js) | Países, indicativos y formato internacional de teléfonos. |
+| [pdf-translation.js](pdf-translation.js) | Traducción del documento y selección de la versión para el cliente. |
+| [whatsapp-business.js](whatsapp-business.js) | Preparación del PDF, mensaje y chat; cliente del servidor opcional de envío. |
+| [whatsapp-business-config.js](whatsapp-business-config.js) | URL pública del servidor opcional. No debe contener secretos. |
+| [whatsapp-worker/](whatsapp-worker/) | Implementación del servidor para Cloud API, configuración e instrucciones de despliegue. |
+| [vendor/](vendor/) | libphonenumber-js 1.13.15, su licencia y la procedencia del archivo. |
+| [tests/](tests/) | Pruebas con el ejecutor nativo de Node.js. |
+| [app.js](app.js), [stilos.css](stilos.css) | Versiones separadas de lógica y estilos conservadas en el proyecto. El punto de entrada actual no las carga directamente. |
 
-### Archivos principales
+Se utilizan HTML, CSS y JavaScript del navegador. Los datos persistentes se guardan en `localStorage`; la sesión utiliza `sessionStorage`. html2pdf.js 0.10.1 se carga desde cdnjs y libphonenumber-js se sirve desde el repositorio. El servidor opcional está preparado para Cloudflare Workers y la API de Meta.
 
-| Archivo o carpeta | Contenido |
-| --- | --- |
-| [index.html](index.html) | Punto de entrada que se ejecuta en GitHub Pages. Incluye los estilos y la lógica principal activa. |
-| [app.js](app.js) y [stilos.css](stilos.css) | Archivos separados de lógica y estilos conservados en el proyecto. El `index.html` actual no los carga directamente; no sustituyen su código embebido. |
-| [pdf-translation.js](pdf-translation.js) | Idiomas del documento, traducción local/en línea y selección del PDF del cliente. |
-| [phone-country.js](phone-country.js) | Selector de país, sugerencias de indicativo y normalización del teléfono. |
-| [whatsapp-business.js](whatsapp-business.js) | Preparación del PDF y mensaje para Web/aplicación, y cliente de la integración automática opcional. |
-| [whatsapp-business-config.js](whatsapp-business-config.js) | Dirección pública del servidor opcional. No debe contener secretos. |
-| [whatsapp-worker/](whatsapp-worker/) | Servidor opcional, configuración de despliegue e instrucciones de activación. |
-| [vendor/](vendor/) | Biblioteca telefónica local, licencia y procedencia. |
-| [tests/](tests/) | Pruebas de teléfonos, importes, numeración y flujos de WhatsApp. |
+## Pruebas
 
-## Datos, acceso y alcance
-
-El historial, el contador, los usuarios, las plantillas y las sugerencias se guardan en el navegador. **No hay sincronización central entre ejecutivos o dispositivos.** Cambiar de navegador, usar otro origen —por ejemplo, pasar de la instalación local a GitHub Pages— o borrar sus datos puede dejar un historial diferente o eliminarlo.
-
-El consecutivo es local; el identificador aleatorio adicional distingue las referencias completas generadas en diferentes navegadores. No es una secuencia global centralizada ni garantiza una numeración sin saltos. Las cotizaciones ya emitidas conservan sus números.
-
-El acceso de usuarios y sus roles se comprueban en el cliente. Este mecanismo organiza la interfaz, pero no equivale a autenticación de servidor ni a una base de datos protegida. El servicio opcional de Meta exige su propia clave de envío y mantiene el token de Meta fuera del sitio público.
-
-## Ejecutar las pruebas
-
-Para desarrollo y comprobación, instalar **Node.js 20 o superior**. Desde la carpeta del repositorio:
+Se requiere **Node.js 20 o superior**. Desde la raíz del repositorio:
 
 ```sh
 node --test tests/*.test.*
 ```
 
-No es necesario instalar paquetes npm para estas pruebas. Cubren importes por persona, descuentos, países e indicativos, numeración, apertura del chat y validación del servidor de WhatsApp. Las solicitudes a Meta se simulan: las pruebas no envían mensajes reales.
+Las pruebas cubren importes por persona, descuentos, selección de países, recuperación del contador, confirmaciones repetidas, traducción y preparación de solicitudes de envío. Las respuestas de Meta se simulan; ejecutar la suite no envía mensajes reales. No es necesario instalar paquetes npm para ejecutarla.
 
-## Publicar en GitHub Pages
+## Publicación
 
-1. Subir los cambios a la rama `main` del repositorio.
-2. En GitHub, abrir **Settings → Pages** y configurar la publicación desde `main`, carpeta `/ (root)`.
-3. Esperar a que termine correctamente el flujo **pages build and deployment** en **Actions**.
-4. Abrir la aplicación publicada y recargar la página para usar la nueva versión.
+La aplicación está publicada con GitHub Pages desde la rama `main`, carpeta raíz. Para reproducir ese despliegue, configurar **Settings → Pages**, seleccionar esa rama y esperar a que termine correctamente **pages build and deployment** en **Actions**.
 
-GitHub Pages publica los archivos estáticos; no ejecuta el servidor de Cloud API. Ese componente se despliega por separado siguiendo su [guía de instalación](whatsapp-worker/README.md).
+GitHub Pages sirve la interfaz estática. El servidor opcional de WhatsApp se despliega por separado y sus tokens deben mantenerse fuera del repositorio y del navegador.
+
+## Límites actuales y siguientes pasos
+
+- **Datos locales.** Cambiar de navegador u origen —por ejemplo, entre la instalación local y GitHub Pages— muestra un almacenamiento distinto. Borrar los datos del sitio puede eliminar el historial local.
+- **Acceso comprobado en el cliente.** Los usuarios y sus roles organizan la interfaz; no sustituyen la autenticación ni el control de acceso de un servidor.
+- **Numeración local con identificador aleatorio.** El consecutivo no es una secuencia global ni garantiza una numeración sin saltos. Las referencias ya emitidas se conservan.
+- **Participación diaria local.** El panel por ejecutivo se calcula con el historial disponible en ese navegador.
+- **Servicios externos.** La traducción en línea, la biblioteca PDF remota y el envío mediante Meta dependen de la disponibilidad y condiciones de sus proveedores.
+
+Para pasar a una operación centralizada, los siguientes componentes serían una base de datos compartida, autenticación de servidor y control de acceso por usuario. También queda pendiente configurar Cloud API y, si se necesitan mensajes fuera de la ventana de atención, incorporar plantillas aprobadas y webhooks de estado. Estos puntos describen trabajo pendiente, no funciones disponibles en la versión actual.
