@@ -30,7 +30,7 @@ La asistencia de IA durante el desarrollo es distinta del funcionamiento de la a
 - Selector de país y sugerencia del indicativo telefónico. Panamá (`+507`) es el país inicial; los números internacionales se guardan con su indicativo.
 - Búsqueda del trámite mediante sugerencias, selección de servicios y autoselección de requisitos según el trámite; las casillas de documentación pueden ajustarse manualmente.
 - Cantidad de personas entre 1 y 20, con precios unitarios y recálculo inmediato del presupuesto.
-- Servicio **Otros**, con precio por persona, para gastos o documentación que no figuren en las opciones habituales. El detalle puede escribirse en Observaciones.
+- Servicio **Otros**, con nombre editable y precio por persona, para especificar gastos o documentación que no figuren en las opciones habituales. El nombre se conserva en el resumen, el PDF y las plantillas.
 - Descuento global aplicado una sola vez. El sistema no añade IVA adicional al importe ingresado.
 - Resumen de confirmación antes de guardar la cotización.
 
@@ -45,7 +45,7 @@ Por ejemplo, Honorarios de $100, Gastos Administrativos de $50 y Otros de $25 su
 
 ### Documentos e idiomas
 
-El PDF incluye la identidad de la firma, los datos del cliente, el trámite, las cantidades, los precios unitarios, los subtotales, los requisitos, las condiciones y los métodos de pago. La vista previa, la descarga y la preparación del archivo para WhatsApp utilizan la misma ruta de generación. El documento incluye las condiciones fijas de la firma junto con las observaciones añadidas por el ejecutivo; el contenido corto cabe en una página y el extenso continúa según su longitud.
+El PDF incluye la identidad de la firma, los datos del cliente, el trámite, las cantidades, los precios unitarios, los subtotales, los requisitos, las condiciones y los métodos de pago. La vista previa, la descarga y la preparación del archivo para WhatsApp utilizan la misma ruta de generación. La sección de requisitos se omite por completo si no se selecciona ningún documento. El documento incluye las condiciones fijas de la firma junto con las observaciones añadidas por el ejecutivo; el contenido corto cabe en una página y el extenso continúa según su longitud.
 
 La opción **Traducir** trabaja sobre el documento del cliente. Admite español, inglés, portugués, francés, alemán, italiano, neerlandés, polaco, rumano, ruso, sueco y turco. Los campos de identidad, las marcas, los nombres de bancos, las referencias, las cuentas y los importes conservan sus valores.
 
@@ -88,7 +88,7 @@ Estas son decisiones de este proyecto, no una comparación de rendimiento o cobe
 | Área | Cambio implementado |
 | --- | --- |
 | Importes | Cálculo en centavos, multiplicación por personas, descuento global y total visible mientras se edita. |
-| Servicios | Opción Otros con precio propio y lectura del precio desde la fila correcta al guardar plantillas. |
+| Servicios | Opción Otros con nombre editable, precio propio y conservación del concepto al guardar/cargar plantillas. |
 | PDF | Renderizado en un documento separado para evitar que el desplazamiento o los estilos de la pantalla recorten el contenido; paginación según su extensión. |
 | Numeración | Recuperación del contador desde el historial, identificadores aleatorios y coordinación entre pestañas mediante Web Locks cuando el navegador lo permite. |
 | Teléfonos | Reconocimiento de indicativos, selector de país y uso del número internacional del cliente al preparar el chat. |
@@ -119,7 +119,7 @@ Escribir o seleccionar el trámite en el campo de búsqueda. La aplicación pued
 
 Introducir la cantidad de personas. Marcar cada servicio que se va a cobrar y escribir su **precio por persona**. Un precio escrito en una fila sin marcar no se suma al presupuesto.
 
-Usar **Otros** para un gasto o documentación adicional y explicar su concepto en **Observaciones**. Si corresponde un descuento, marcar **Descuento** e introducir su importe global; no se multiplica por personas.
+Marcar **Otros**, sustituir ese nombre por el servicio o documento que se cobra —por ejemplo, **Antecedentes apostillados**— e indicar su precio por persona. Usar **Observaciones** para añadir detalles adicionales. Si corresponde un descuento, marcar **Descuento** e introducir su importe global; no se multiplica por personas.
 
 Ejemplo para dos personas:
 
@@ -202,7 +202,7 @@ Abrir **http://127.0.0.1:8000**. La terminal debe permanecer abierta mientras se
 
 ## Traducción del PDF
 
-Después de confirmar, pulsar **Traducir** en la parte inferior. Seleccionar el idioma de los textos libres y el idioma del documento final. Los títulos y las opciones del catálogo se traducen desde español, aunque las observaciones estén escritas en otro idioma.
+Después de confirmar, pulsar **Traducir** en la parte inferior. Seleccionar el idioma de los textos libres y el idioma del documento final. Los títulos y las opciones del catálogo se traducen desde español. El nombre personalizado de Otros y los textos libres de Trámite y Observaciones utilizan el idioma de origen seleccionado.
 
 **Traducir y generar PDF** descarga el documento y selecciona esa versión para las siguientes vistas previas, descargas y archivos preparados para WhatsApp. **Usar PDF español original** restaura el documento de origen. Al confirmar cambios, iniciar una cotización nueva o recargar la página se descarta la selección de traducción; los archivos ya descargados permanecen en el dispositivo.
 
