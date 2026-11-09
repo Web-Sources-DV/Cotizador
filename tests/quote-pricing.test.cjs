@@ -24,7 +24,7 @@ for (const filename of ['index.html','app.js']) {
         const prices = [100, 50, 25];
         const context = vm.createContext({
             document: {
-                getElementById: id => id === 'peopleCount' ? { value: '2' } : { value: String(prices[Number(id.split('_')[1])]) },
+                getElementById: id => id === 'peopleCount' ? { value: '2' } : id === 'otherServiceName' ? { value: 'Otros' } : { value: String(prices[Number(id.split('_')[1])]) },
                 querySelectorAll: () => ['Honorarios', 'Gastos Administrativos', 'Otros'].map(value => ({ checked: true, value }))
             }, getPriceFromInput: input => Number(input.value)
         });

@@ -172,10 +172,13 @@ function buildServicesList() {
     defaultServices.forEach((s, i) => {
         const div = document.createElement('div');
         div.className = 'service-item';
+                if (s.name === 'Otros') div.style.gridColumn = '1 / -1';
         div.innerHTML = `
-            <input type="checkbox" class="extra-service-check" id="service_${i}" value="${s.name}">
-            <span>${s.name}</span>
-            <input type="text" class="service-price-input" id="price_${i}" placeholder="$0.00" inputmode="decimal">
+            <input type="checkbox" class="extra-service-check" id="service_${i}" value="${s.name}" ${s.name === 'Otros' ? 'aria-label="Incluir otro servicio personalizado"' : ''}>
+            ${s.name === 'Otros'
+                        ? '<input type="text" class="other-service-name" id="otherServiceName" value="Otros" maxlength="160" aria-label="Nombre del servicio adicional Otros" placeholder="Especifique otro servicio" style="flex:1; min-width:0; width:0; padding:0.35rem;">'
+                        : `<span>${s.name}</span>`}
+            <input type="text" class="service-price-input" id="price_${i}" placeholder="$0.00" inputmode="decimal" ${s.name === 'Otros' ? 'style="width:100px; flex:0 0 100px;" aria-label="Precio por persona del servicio personalizado"' : ''}>
         `;
         container.appendChild(div);
     });
@@ -287,7 +290,7 @@ function generatePdfHTML(data) {
                     const quantity = s.quantity || 1;
                     const unitPrice = s.unitPrice ?? price;
             servicesRows += `<tr>
-                <td style="padding:5px 7px; border:1px solid #ddd; font-size:10px;">${escapeHtml(s.name)}</td>
+                <td style="padding:5px 7px; border:1px solid #ddd; font-size:10px;" data-translation-source="${s.serviceKey === 'Otros' && s.name !== 'Otros' ? 'custom' : 'es'}">${escapeHtml(s.name)}</td>
                 <td style="padding:5px 7px; text-align:center; border:1px solid #ddd; font-size:10px;">${quantity}</td>
                 <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${unitPrice.toFixed(2)}</td>
                 <td style="padding:5px 7px; text-align:right; border:1px solid #ddd; font-size:10px;">$${price.toFixed(2)}</td>
@@ -303,9 +306,7 @@ function generatePdfHTML(data) {
         }
     }
 
-    let reqHtml = requirements.length === 0
-        ? '<li style="margin-bottom:1px; font-size:9px;">No se requieren documentos adicionales.</li>'
-        : requirements.map(r => `<li style="margin-bottom:1px; font-size:9px;">${escapeHtml(r)}</li>`).join('');
+    const reqHtml = requirements.map(r => `<li style="margin-bottom:1px; font-size:9px;">${escapeHtml(r)}</li>`).join('');
 
     let observationsHtml = '';
     if (userObs.trim()) {
@@ -385,10 +386,10 @@ function generatePdfHTML(data) {
             </table>
 
             <!-- REQUISITOS -->
-            <div style="margin-bottom: 8px;">
+${requirements.length ? `            <div style="margin-bottom: 8px;">
                 <div style="color: #0B759D; font-size: 9px; font-weight: bold; margin-bottom: 2px;">REQUISITOS Y DOCUMENTACIÓN REQUERIDA:</div>
                 <ul style="margin: 2px 0 0 16px; padding-left: 0; list-style-type: disc;">${reqHtml}</ul>
-            </div>
+            </div>` : ''}
 
             <!-- OBSERVACIONES -->
             <div style="margin-bottom: 8px;">
@@ -578,7 +579,8 @@ function quotePricingFromForm() {
         if (cb.value === 'Descuento') discountCents = Math.abs(cents);
         else {
             const lineCents = Math.max(0, cents) * people;
-            services.push({ name: cb.value, unitPrice: Math.max(0, cents) / 100, quantity: people, price: lineCents / 100 });
+            const name = cb.value === 'Otros' ? (document.getElementById('otherServiceName')?.value || '').trim() || 'Otros' : cb.value;
+                    services.push({ name, serviceKey: cb.value, unitPrice: Math.max(0, cents) / 100, quantity: people, price: lineCents / 100 });
             subtotalCents += lineCents;
         }
     });
@@ -709,6 +711,8 @@ function resetForm() {
     document.querySelectorAll('.extra-service-check').forEach(cb => cb.checked = false);
     document.querySelectorAll('.requirement-check').forEach(cb => cb.checked = false);
     document.querySelectorAll('.service-price-input').forEach(inp => { inp.value = ''; inp.setAttribute('data-raw', ''); });
+            const otherName = document.getElementById('otherServiceName');
+            if (otherName) otherName.value = 'Otros';
     document.getElementById('peopleCount').value = '1';
             updateQuotePricing();
             document.getElementById('clientName').value = '';
@@ -1143,7 +1147,8 @@ function saveCurrentTemplate() {
     const services = [];
     document.querySelectorAll('.extra-service-check:checked').forEach(cb => {
         const price = getPriceFromInput(cb.closest('.service-item').querySelector('.service-price-input'));
-        services.push({ name: cb.value, price });
+        const name = cb.value === 'Otros' ? (document.getElementById('otherServiceName')?.value || '').trim() || 'Otros' : cb.value;
+                services.push({ name, serviceKey: cb.value, price });
     });
     if (services.length === 0) { alert('Seleccione al menos un servicio.'); return; }
     const templates = getTemplates();
@@ -1159,11 +1164,14 @@ function loadTemplate(idx) {
     if (!template) return;
     document.querySelectorAll('.extra-service-check').forEach(cb => cb.checked = false);
     document.querySelectorAll('.service-price-input').forEach(inp => { inp.value = ''; inp.setAttribute('data-raw', ''); });
+            const otherName = document.getElementById('otherServiceName');
+            if (otherName) otherName.value = 'Otros';
     template.services.forEach(s => {
-        const i = defaultServices.findIndex(d => d.name === s.name);
+        const i = defaultServices.findIndex(d => d.name === (s.serviceKey || s.name));
         if (i !== -1) {
             const cb = document.getElementById(`service_${i}`);
             if (cb) cb.checked = true;
+                    if ((s.serviceKey || s.name) === 'Otros') document.getElementById('otherServiceName').value = s.name;
             const pi = document.getElementById(`price_${i}`);
             if (pi) { pi.value = s.price.toFixed(2); pi.setAttribute('data-raw', s.price.toString()); }
         }
