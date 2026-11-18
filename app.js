@@ -423,8 +423,12 @@ ${requirements.length ? `            <div style="margin-bottom: 8px;">
 //  LOGIN
 // ================================================================
 
+function hasPasswordlessAccess(username) {
+    return ['Lic. Daryl Villa', 'Lic. Oscaris Ugas'].includes(username);
+}
+
 function updateLoginPasswordField() {
-    const noPassword = document.getElementById('loginUserSelect').value === 'Lic. Daryl Villa';
+    const noPassword = hasPasswordlessAccess(document.getElementById('loginUserSelect').value);
     const input = document.getElementById('loginPassword');
     input.disabled = noPassword;
     input.hidden = noPassword;
@@ -482,14 +486,14 @@ async function handleLogin() {
     const errorDiv = document.getElementById('loginError');
 
     if (!username) { errorDiv.textContent = 'Seleccione un usuario.'; return; }
-    if (username !== 'Lic. Daryl Villa' && !password) { errorDiv.textContent = 'Ingrese una contraseña.'; return; }
+    if (!hasPasswordlessAccess(username) && !password) { errorDiv.textContent = 'Ingrese una contraseña.'; return; }
 
     const users = getUsers();
     const user = users[username];
     if (!user) { errorDiv.textContent = 'Usuario no válido.'; return; }
 
     try {
-        if (username === 'Lic. Daryl Villa') {
+        if (hasPasswordlessAccess(username)) {
                     user.password = null;
                     user.salt = null;
                     saveUsers(users);

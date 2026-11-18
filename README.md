@@ -69,7 +69,7 @@ Las herramientas disponibles dependen del usuario y de su rol:
 | Sugerencias | Formulario con mensaje, nombre y correo opcionales. Se guarda en el navegador; Lic. Daryl Villa puede revisar y borrar las sugerencias locales. No es un envío por correo ni un buzón centralizado. |
 | Presentación | Diseño adaptable, modo oscuro y preferencia de tema guardada en el navegador. |
 
-Al recuperar una sesión guardada se comprueba que no hayan pasado más de ocho horas desde el inicio; también puede cerrarse mediante **Salir**. Las contraseñas de las cuentas que las requieren se guardan como un hash con salt en el navegador. El enlace de recuperación muestra indicaciones para contactar al administrador; no implementa un restablecimiento automático por correo. Lic. Daryl Villa mantiene el acceso sin contraseña configurado para ese usuario. Estos controles no sustituyen una autenticación de servidor.
+Al recuperar una sesión guardada se comprueba que no hayan pasado más de ocho horas desde el inicio; también puede cerrarse mediante **Salir**. Las contraseñas de las cuentas que las requieren se guardan como un hash con salt en el navegador. El enlace de recuperación muestra indicaciones para contactar al administrador; no implementa un restablecimiento automático por correo. Lic. Daryl Villa y Lic. Oscaris Ugas tienen acceso sin contraseña; cada cuenta conserva su rol y sus opciones de interfaz. Estos controles no sustituyen una autenticación de servidor.
 
 ## Qué lo diferencia de un cotizador genérico
 
@@ -94,7 +94,7 @@ Estas son decisiones de este proyecto, no una comparación de rendimiento o cobe
 | Teléfonos | Reconocimiento de indicativos, selector de país y uso del número internacional del cliente al preparar el chat. |
 | WhatsApp | Botones separados para Web y Business, descarga del PDF y enlace al destinatario si el navegador bloquea la ventana. |
 | Traducción | Idioma independiente para el PDF, términos revisados para encabezados y controles que detienen la generación si una traducción altera cifras. |
-| Acceso y seguimiento | Acceso sin contraseña para Lic. Daryl Villa, panel exclusivo de uso diario y documentación del alcance local de usuarios, historial y sugerencias. |
+| Acceso y seguimiento | Acceso sin contraseña para Lic. Daryl Villa y Lic. Oscaris Ugas, panel de uso diario exclusivo de Daryl y documentación del alcance local de usuarios, historial y sugerencias. |
 | Validación | Pruebas automatizadas de cálculos, numeración, teléfonos, traducción y solicitudes simuladas a WhatsApp Business Cloud API. |
 
 ## Guía de uso para usuarios nuevos
@@ -103,7 +103,7 @@ Estas son decisiones de este proyecto, no una comparación de rendimiento o cobe
 
 Abrir la [aplicación publicada](https://web-sources-dv.github.io/Cotizador/) en un navegador actualizado. Para utilizar esta versión no hace falta clonar el repositorio ni instalar Python; la instalación local del siguiente apartado está dirigida a quien quiera ejecutarla en su equipo.
 
-Seleccionar el usuario. Si es su primer acceso en ese navegador, crear la contraseña cuando se solicite. Si ya existe una contraseña local para esa cuenta, utilizar la que se creó anteriormente. Lic. Daryl Villa entra sin contraseña. Al terminar el trabajo, usar **Salir**.
+Seleccionar el usuario. Si es su primer acceso en ese navegador, crear la contraseña cuando se solicite. Si ya existe una contraseña local para esa cuenta, utilizar la que se creó anteriormente. Lic. Daryl Villa y Lic. Oscaris Ugas entran sin contraseña. Al terminar el trabajo, usar **Salir**.
 
 ### 2. Completar los datos del cliente
 
